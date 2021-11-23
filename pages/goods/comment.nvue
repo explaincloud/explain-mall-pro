@@ -2,7 +2,7 @@
   <em-page class="address-add" :em-styles="pageStyles">
     <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
       <em-header-inset></em-header-inset>
-      <view class="average">
+      <view class="average" :style="[$em.$getThemeStyle(['bg-color--1'])]">
         <text class="average-title" :style="[$em.$getThemeStyle(['color-1'])]">平均得分</text>
         <text class="average-score" :style="[$em.$getThemeStyle(['color-1'])]">5.0</text>
         <view class="average-rate">
@@ -28,7 +28,7 @@
           <text class="list-item-content" :style="[$em.$getThemeStyle(['color-6'])]">谢谢你们，继续努力！继续出色的工作。不用说，我们对结果非常满意。这是很令人满意的一件物品。</text>
           <scroll-view class="list-item-scroll-view" :scroll-x="true">
             <view class="list-item-images">
-              <view class="list-item-images-item" v-for="xi in 9" :key="xi" :class="[xi===1?'list-item-images-item-first-child':'']" @click="previewImage('/static/img/goods/1.png')">
+              <view class="list-item-images-item" v-for="(x, xi) in 9" :key="xi" :class="[xi===0?'list-item-images-item-first-child':'']" @click="previewImage('/static/img/goods/1.png')">
                 <image class="list-item-images-item-image" src="/static/img/goods/1.png" mode="aspectFill"></image>
               </view>
             </view>
@@ -234,11 +234,11 @@
   .list-item-scroll-view {
     flex-direction: row;
     flex: 1;
+    margin-top: 16px;
   }
 
   .list-item-images {
     flex-direction: row;
-    margin-top: 16px;
     padding-bottom: 10px;
   }
 
