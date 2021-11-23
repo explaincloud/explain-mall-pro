@@ -43,3 +43,5 @@
 * [x] 我的足迹 pages/history/history
 * [x] 热门商品 pages/hot/hot
 * [x] 用户评论 pages/goods/comment
+* [ ] 登录 pages/login/login
+* [ ] 注册 pages/register/register
