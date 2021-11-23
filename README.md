@@ -42,3 +42,4 @@
 * [x] 商品类别 pages/category/category.nvue
 * [x] 我的足迹 pages/history/history
 * [x] 热门商品 pages/hot/hot
+* [x] 用户评论 pages/goods/comment
