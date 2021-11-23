@@ -1,0 +1,471 @@
+<template>
+  <view>
+    <em-page class="address-add" :em-styles="pageStyles">
+      <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+        <em-header-inset></em-header-inset>
+        <view class="map-wrap">
+          <map class="map" :longitude="address.longitude" :latitude="address.latitude" :markers="getMarkers(address)"></map>
+          <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="map-cover map-cover-top-left" :style="[{'box-shadow': `-12px -12px 0 0 ${$em.$getThemeStyle(['bg-color--1'])['background-color']}`}]"></view>
+          <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="map-cover map-cover-top-right" :style="[{'box-shadow': `12px -12px 0 0 ${$em.$getThemeStyle(['bg-color--1'])['background-color']}`}]"></view>
+          <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="map-cover map-cover-bottom-left" :style="[{'box-shadow': `-12px 12px 0 0 ${$em.$getThemeStyle(['bg-color--1'])['background-color']}`}]"></view>
+          <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="map-cover map-cover-bottom-right" :style="[{'box-shadow': `12px 12px 0 0 ${$em.$getThemeStyle(['bg-color--1'])['background-color']}`}]"></view>
+        </view>
+        <view class="form" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <view class="form-row">
+            <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">收货人</text>
+            <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+              <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.consignee" type="text" placeholder="请填写收货人姓名" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">手机号码</text>
+            <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+              <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.mobile" type="text" placeholder="请填写收货人手机号" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">所在地区</text>
+            <view class="form-input-row" @click="chooseLocation">
+              <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.province" type="text" disabled placeholder="省" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+              </view>
+              <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.city" type="text" disabled placeholder="市" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+              </view>
+              <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.country" type="text" disabled placeholder="区县" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+              </view>
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">位置名称</text>
+            <view class="form-textarea-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+              <textarea class="form-textarea" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.name" placeholder="街道、楼牌号等" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" auto-height maxlength="300"></textarea>
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">详细地址</text>
+            <view class="form-textarea-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+              <!-- 安卓微信小程序不能通过v-if控制textarea显隐，会造成textarea高度异常 -->
+              <textarea class="form-textarea" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.detail" placeholder="街道、楼牌号等" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" auto-height maxlength="300"></textarea>
+            </view>
+          </view>
+          <view class="form-row">
+            <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">设置默认地址</text>
+            <view class="form-input-row">
+              <view class="form-tips">
+                <text class="form-tips-text" :style="[$em.$getThemeStyle(['color-6'])]">提醒：每次下单会默认推荐使用该地址</text>
+              </view>
+              <view class="form-checkbox-wrap">
+                <view class="form-checkbox-btn" :style="[address.default?$em.$getThemeStyle(['bg-color-101']):$em.$getThemeStyle(['bg-color-110'])]" @click="address.default = !address.default">
+                  <em-icon class="form-checkbox-btn-icon" v-if="address.default" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\ueb7b'"></em-icon>
+                  <em-icon class="form-checkbox-btn-icon" v-else :style="[$em.$getThemeStyle(['color-110'])]" :unicode="'\ueb7f'"></em-icon>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="submit">
+          <view class="submit-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="clickSubmit">
+            <text class="submit-btn-text" :style="[$em.$getThemeStyle(['color-101'])]">保存</text>
+          </view>
+        </view>
+      </em-scroller>
+    </em-page>
+    <em-header class="header" :title="title" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </view>
+</template>
+
+<script>
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        type: '',
+        title: '',
+        loaded: false,
+        address: {
+          name: '',
+          province: '',
+          country: '',
+          city: '',
+          detail: '',
+          consignee: '',
+          mobile: '',
+          longitude: 0.00,
+          latitude: 0.00,
+          default: false
+        }
+      }
+    },
+    computed: {
+      ...mapState(['userInfo']),
+      PLATFORM() {
+        // 因为项目使用的是nvue，所以不需要考虑APP-VUE
+        // 目前支持以下平台
+        const platform = {
+          'H5': 'H5',
+          'MPWEIXIN': 'MP-WEIXIN',
+          'APPANDROID': 'APP-ANDROID',
+          'APPIOS': 'APP-IOS'
+        }
+        let result = ''
+        // #ifdef H5
+        result = platform.H5
+        // #endif
+        // #ifdef MP-WEIXIN
+        result = platform.MPWEIXIN
+        // #endif
+        // #ifdef APP-PLUS
+        switch (uni.getSystemInfoSync().platform) {
+          case 'android':
+            result = platform.APPANDROID
+            break
+          case 'ios':
+            result = platform.APPIOS
+            break
+        }
+        // #endif
+        return result
+      },
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad(options) {
+      this.type = options.type
+      if (options.type === 'edit') {
+        this.title = '编辑地址'
+      } else {
+        this.title = '添加地址'
+      }
+      uni.setNavigationBarTitle({
+        title: this.title
+      })
+    },
+    onShow() {
+      if (this.loaded) {
+        return
+      }
+      this.loaded = true
+      if (this.type != 'edit') {
+        uni.showLoading({
+          mask: true,
+          title: '加载中...'
+        })
+        setTimeout(() => {
+          this.chooseLocation({
+            fail: err => {
+              // app.$navigateBack()
+              uni.getLocation({
+                type: 'gcj02',
+                success: res => {
+                  this.address.longitude = res.longitude
+                  this.address.latitude = res.latitude
+                },
+                fail: e => {
+                  console.log(e)
+                }
+              })
+            }
+          })
+          uni.hideLoading()
+        }, 1000)
+      }
+    },
+    methods: {
+      clickSubmit() {
+        console.log(this.address)
+        uni.showToast({
+          mask: true,
+          title: '保存成功',
+          duration: 1500,
+          success: () => {
+            setTimeout(() => {
+              app.$navigateBack()
+            }, 1500)
+          }
+        })
+      },
+      getMarkers(address) {
+        return [{
+          id: 1000, // nvue必填，不然无法显示iconPath
+          longitude: address.longitude,
+          latitude: address.latitude,
+          iconPath: this.userInfo.avatar + '@radius.png',
+          width: 36,
+          height: 36
+        }]
+      },
+      chooseLocation(callback) {
+        uni.chooseLocation({
+          success: res => {
+            try {
+              let location = formatLocation(res)
+              this.address.name = location.NAME
+              this.address.province = location.REGION_PROVINCE
+              this.address.city = location.REGION_CITY
+              this.address.country = location.REGION_COUNTRY
+              // this.address.detail= location.ADDRESS != location.NAME ? location.ADDRESS + '' + location.NAME : location.ADDRESS || location.NAME
+              this.address.detail = location.ADDRESS || location.NAME
+              this.address.longitude = res.longitude
+              this.address.latitude = res.latitude
+            } catch (e) {
+              // uni.showToast({
+              //   icon: 'error',
+              //   title: '获取地理位置失败'
+              // })
+              uni.showModal({
+                title: '提示',
+                content: '获取地理位置失败，请选择包含省市区/县的地址',
+                showCancel: false
+              })
+              // this.address = {
+              //   name: res.name,
+              //   province: '',
+              //   country: '',
+              //   city: '',
+              //   detail: res.address,
+              //   consignee: '',
+              //   mobile: '',
+              //   longitude: res.longitude,
+              //   latitude: res.latitude,
+              //   default: false
+              // }
+            }
+          },
+          fail: err => {
+            if (callback && callback.fail) {
+              callback.fail(err)
+            }
+          }
+        })
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+
+  /**
+   * 格式化位置
+   * @param {*} res chooseLocation成功后返回参数
+   * 格式: {
+  	 address: "浙江省舟山市定海区昌国路61号"
+  	 errMsg: "chooseLocation:ok"
+  	 latitude: 30.019785
+  	 longitude: 122.106927
+  	 name: "舟山市定海区人民政府"
+     }
+   */
+  function formatLocation(res) {
+    var regex = /^(北京市|天津市|重庆市|上海市|香港特别行政区|澳门特别行政区)/;
+    var REGION_PROVINCE = [];
+    var addressBean = {
+      REGION_PROVINCE: null,
+      REGION_COUNTRY: null,
+      REGION_CITY: null,
+      ADDRESS: null,
+      NAME: null
+    };
+
+    function regexAddressBean(address, addressBean) {
+      // regex = /^(.*?[市州]|.*?地区|.*?特别行政区)(.*?[市区县])(.*?)$/g;
+      regex = /^(.*?[市]|.*?地区|.*?特别行政区)(.*?[市区县])(.*?)$/g;
+      var addxress = regex.exec(address);
+      addressBean.REGION_CITY = addxress[1];
+      addressBean.REGION_COUNTRY = addxress[2];
+      addressBean.ADDRESS = addxress[3];
+      addressBean.NAME = res.name;
+      // console.log(addxress);
+    }
+    if (!(REGION_PROVINCE = regex.exec(res.address))) {
+      regex = /^(.*?(省|自治区))(.*?)$/;
+      REGION_PROVINCE = regex.exec(res.address);
+      addressBean.REGION_PROVINCE = REGION_PROVINCE[1];
+      regexAddressBean(REGION_PROVINCE[3], addressBean);
+    } else {
+      addressBean.REGION_PROVINCE = REGION_PROVINCE[1];
+      regexAddressBean(res.address, addressBean);
+    }
+    return addressBean;
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .map-wrap {
+    margin: 28px 28px 0 28px;
+    flex-direction: row;
+    position: relative;
+  }
+
+  .map {
+    flex: 1;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .map-cover {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+  }
+
+  .map-cover-top-left {
+    top: 0px;
+    left: 0px;
+    box-shadow: -12px -12px 0 0;
+  }
+
+  .map-cover-top-right {
+    top: 0px;
+    right: 0px;
+    box-shadow: 12px -12px 0 0;
+  }
+
+  .map-cover-bottom-left {
+    bottom: 0px;
+    left: 0px;
+    box-shadow: -12px 12px 0 0;
+  }
+
+  .map-cover-bottom-right {
+    bottom: 0px;
+    right: 0px;
+    box-shadow: 12px 12px 0 0;
+  }
+
+  .form {
+    margin-top: 28px;
+    padding: 0 28px 28px 28px;
+    border-radius: 34px;
+  }
+
+  .form-row {
+    margin-top: 28px;
+  }
+
+  .form-label {
+    font-size: 14px;
+    line-height: 14px;
+    font-weight: 700;
+  }
+
+  .form-input-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .form-input-wrap {
+    flex: 0.3;
+    padding: 10px 0;
+    border-bottom-width: 2px;
+    border-style: solid;
+  }
+
+  .form-input {
+    font-size: 16px;
+  }
+
+  .form-input-placeholder {
+    font-size: 14px;
+  }
+
+  .form-textarea-wrap {
+    flex-direction: row;
+    padding: 10px 0;
+    border-bottom-width: 2px;
+    border-style: solid;
+  }
+
+  .form-textarea {
+    flex: 1;
+    font-size: 16px;
+  }
+
+  .form-tips-text {
+    font-size: 13px;
+  }
+
+  .form-checkbox-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .submit {
+    padding: 28px;
+  }
+
+  .submit-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 58px;
+    border-radius: 12px;
+  }
+
+  .submit-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>

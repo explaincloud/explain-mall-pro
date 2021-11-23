@@ -1,0 +1,105 @@
+{
+  "easycom": {
+    "^em-(.*)": "@/emui/components/em-$1/em-$1"
+  },
+  "pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+    // #ifdef H5
+    // H5因为可以输入浏览器地址，导致首次进入的页面路由不一定是所设置的首页，所以在H5在App.vue和init.vue中做了处理，强制跳转到init中处理完所有初始化业务再跳回与首次进入时对应的路由
+    {
+      "path": "pages/index/index"
+    }, {
+      "path": "pages/init/init"
+    },
+    // #endif
+    // #ifndef H5
+    // 非H5，也就是小程序和App，默认首次进入的页面是init，如需指定初始化完毕后要跳转的页面则在路由后面带上?redirect=/pages/xx/xx即可
+    {
+      "path": "pages/init/init"
+    }, {
+      "path": "pages/index/index"
+    },
+    // #endif
+    {
+      "path": "pages/goods/goods",
+      "style": {
+        "navigationBarTitleText": "商品详情"
+      }
+    }, {
+      "path": "pages/favorite/favorite",
+      "style": {
+        "navigationBarTitleText": "收藏"
+      }
+    }, {
+      "path": "pages/order/create",
+      "style": {
+        "navigationBarTitleText": "创建订单"
+      }
+    }, {
+      "path": "pages/pay/result",
+      "style": {
+        "navigationBarTitleText": "支付结果"
+      }
+    }, {
+      "path": "pages/address/address",
+      "style": {
+        "navigationBarTitleText": "我的地址"
+      }
+    }, {
+      "path": "pages/address/add",
+      "style": {
+        "navigationBarTitleText": ""
+      }
+    }, {
+      "path": "pages/order/order",
+      "style": {
+        "navigationBarTitleText": "我的订单"
+      }
+    }, {
+      "path": "pages/order/detail",
+      "style": {
+        "navigationBarTitleText": "订单详情"
+      }
+    }, {
+      "path": "pages/category/category",
+      "style": {
+        "navigationBarTitleText": "商品类别"
+      }
+    }, {
+      "path": "pages/history/history",
+      "style": {
+        "navigationBarTitleText": "我的足迹"
+      }
+    }, {
+      "path": "pages/hot/hot",
+      "style": {
+        "navigationBarTitleText": "热门商品"
+      }
+    }, {
+      "path": "pages/goods/comment",
+      "style": {
+        "navigationBarTitleText": "商品评论"
+      }
+    }, {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    }, {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "explain-mall-pro",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8",
+    "pageOrientation": "portrait", // 固定为竖屏显示
+    "app-plus": {
+      "bounce": "none"
+    }
+  }
+}

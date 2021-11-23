@@ -1,0 +1,542 @@
+<template>
+  <em-page class="goods" :em-styles="pageStyles">
+    <em-scroller class="scroller" @scroll="scroll" :scroll-top="scrollTop">
+      <view class="pictures-inset" :style="{'height': `${systemInfo.windowWidth * 1.18 - 34}px`}"></view>
+      <swiper class="pictures" :style="{'width': `${systemInfo.windowWidth}px`, 'height': `${systemInfo.windowWidth * 1.18}px`, 'transform': `translateY(${pictureTop}px)`}" :indicator-dots="true">
+        <swiper-item class="pictures-item" v-for="(x, xi) in goods.pictures" :key="xi">
+          <image class="pictures-item-img" :style="{'width': `${systemInfo.windowWidth}px`, 'height': `${systemInfo.windowWidth * 1.18}px`}" :src="x.url"></image>
+        </swiper-item>
+      </swiper>
+      <view class="btns" :style="{'margin-top': `${headerHeight}px`}">
+        <view class="btn btn-favorite">
+          <em-icon class="btn-icon" style="color: #292929;" :unicode="'\ueae5'"></em-icon>
+        </view>
+        <view class="btn btn-share">
+          <em-icon class="btn-icon" style="color: #FFFFFF;" :unicode="'\uf0fd'"></em-icon>
+        </view>
+      </view>
+      <view class="content-box">
+        <view class="content" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <view class="content-title">
+            <text class="content-title-text" :style="[$em.$getThemeStyle(['color-2'])]">{{"Calvin Klein"}}</text>
+          </view>
+          <view class="content-comment" @click="$em.$navigateTo('/pages/goods/comment')">
+            <view class="content-comment-rate">
+              <em-icon class="content-comment-rate-star" v-for="index in 5" :key="index" :unicode="'\uf186'" :class="[index>goods.score?'content-comment-rate-star-line':'']"></em-icon>
+            </view>
+            <text class="content-comment-count" :style="[$em.$getThemeStyle(['color-2'])]">439 评论</text>
+          </view>
+          <view class="content-price">
+            <text class="content-price-text" :style="[$em.$getThemeStyle(['color-2'])]">￥236</text>
+          </view>
+          <view class="content-desc">
+            <text class="content-desc-text" :style="[$em.$getThemeStyle(['color-7'])]">时尚休闲女士运动鞋</text>
+          </view>
+          <view class="content-property" ref="property">
+            <view class="content-property-item" v-for="(x, xi) in goods.properties" :key="xi">
+              <view class="content-property-title">
+                <text class="content-property-title-text" :style="[$em.$getThemeStyle(['color-2'])]">{{x.label}}</text>
+              </view>
+              <view class="content-property-option">
+                <view class="content-property-option-item" :style="[$em.$getThemeStyle(['bg-color-2', 'bd-color-2']), xx.checked?$em.$getThemeStyle(['goods-property-option-checked']):{}, {'margin': isMultiline(xx.label, 13, propertyOptionMaxWidth)?'12px 0 0 0':'12px 12px 0 0'}]" v-for="(xx, xxi) in x.options" :key="xxi" @click="clickPropertyOption(x, xx)">
+                  <text class="content-property-option-item-text" :style="[$em.$getThemeStyle(['color-2']), xx.checked?$em.$getThemeStyle(['goods-property-option-checked-text']):{}, {'width': isMultiline(xx.label, 13, propertyOptionMaxWidth)?`${propertyOptionMaxWidth}px`:null}]">{{xx.label}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="content-detail">
+            <view class="content-detail-title">
+              <text class="content-detail-title-text" :style="[$em.$getThemeStyle(['color-2'])]">图文详情</text>
+            </view>
+            <view class="content-details">
+              <view class="content-detail-item" v-for="(x, xi) in goods.details" :key="xi">
+                <image class="content-detail-item-img" :src="x.url" mode="widthFix"></image>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </em-scroller>
+    <view class="footer" :style="[$em.$getThemeStyle(['bg-color-1', 'shadow-1'])]">
+      <view class="footer-btns">
+        <view class="footer-btn footer-btn-spec" :style="[$em.$getThemeStyle(['bg-color-107'])]" @click="scrollToProperty">
+          <text class="footer-btn-text footer-btn-spec-text" :style="[$em.$getThemeStyle(['color-107'])]">选择规格</text>
+          <em-icon class="footer-btn-spec-icon" :style="[$em.$getThemeStyle(['color-107'])]" :unicode="'\uea6d'"></em-icon>
+        </view>
+        <view class="footer-btn footer-btn-buy" :style="[$em.$getThemeStyle(['bg-color-101'])]" ref="buy" @touchend="addCart">
+          <text class="footer-btn-text footer-btn-buy-text" :style="[$em.$getThemeStyle(['color-101'])]">加入购物车</text>
+        </view>
+      </view>
+    </view>
+    <em-header class="header" ref="header" title="商品详情" :em-styles="headerStyles" :left-btns="headerLeftBtns" :right-btns="headerRightBtns" @clickBtn="clickHeaderBtn"></em-header>
+    <!-- 购物车小球 -->
+    <view class="cart-ball" v-if="shoppingCartBallShow" :style="[$em.$getThemeStyle(['bg-color-101']), {top: `${shoppingCartBall.y-10}px`, left: `${shoppingCartBall.x-10}px`}]"></view>
+  </em-page>
+</template>
+
+<script>
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  // #ifdef APP-NVUE
+  const dom = uni.requireNativePlugin('dom')
+  // #endif
+
+  export default {
+    data() {
+      return {
+        headerHeight: 0,
+        headerOpacity: 0,
+        pictureTop: 0,
+        scrollTop: 0,
+        oldScrollTop: 0,
+        propertyElementTop: 0,
+        shoppingCartBall: {},
+        shoppingCartBallShow: false,
+        shoppingCartBallMoving: false,
+        shoppingCartTotal: 0,
+        goods: {}
+      }
+    },
+    computed: {
+      ...mapState([
+        'systemInfo'
+      ]),
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: {
+            ...app.$getThemeStyle(['bg-color-1', this.headerOpacity >= 1 ? 'shadow-1' : 'shadow-0']),
+            'opacity': this.headerOpacity
+          },
+          title: {
+            ...app.$getThemeStyle(['color-1']),
+            'opacity': this.headerOpacity
+          }
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      },
+      headerRightBtns() {
+        return [{
+          name: 'cart',
+          iconUnicode: '\uf120',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-101']),
+            icon: app.$getThemeStyle(['color-101'])
+          }
+        }]
+      },
+      propertyOptionMaxWidth() {
+        // width100% - property-option-item-padding - content-padding - property-option-item-border
+        return this.systemInfo.windowWidth - 14 * 2 - 28 * 2 - 1 * 2
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    mounted() {
+      // 获取header的高度
+      // #ifdef APP-NVUE
+      dom.getComponentRect(this.$refs.header, rect => {
+        this.headerHeight = rect.size.height
+      })
+      // #endif
+      // #ifndef APP-NVUE
+      uni.createSelectorQuery().select(".header").boundingClientRect(rect => {
+        this.headerHeight = rect.height
+      }).exec()
+      uni.createSelectorQuery().select(".content-property").boundingClientRect(rect => {
+        this.propertyElementTop = rect.top
+      }).exec()
+      // #endif
+    },
+    onLoad() {
+      this.getGoodsInfo()
+    },
+    methods: {
+      getGoodsInfo() {
+        app.$api.getGoodsInfo().then(res => {
+          this.goods = res.data
+        })
+      },
+      async addCart(e) {
+        // 设置节流属性
+        if (this.shoppingCartBallMoving) return
+        this.shoppingCartBallMoving = true
+
+        let startPosition = {
+          // 安卓获取的pageX,pageY坐标不对，改为用screen，H5和小程序用client
+          x: e.changedTouches[0].screenX || e.changedTouches[0].clientX || e.changedTouches[0].pageX,
+          y: e.changedTouches[0].screenY || e.changedTouches[0].clientY || e.changedTouches[0].pageY
+        }
+        let endPosition = {}
+
+        // #ifdef APP-NVUE
+        endPosition = await new Promise(reject => {
+          // 获取到组件中的ref时，要取索引0才能取到，猜测是因为组件内循环了，所以ref成了数组
+          dom.getComponentRect(this.$refs.header.$refs.cart[0], rect => {
+            const size = rect.size
+            var x = size.left + size.width / 2
+            var y = size.top + size.height / 2
+            reject({
+              x,
+              y
+            })
+          })
+        })
+        // #endif
+        // #ifndef APP-NVUE
+        endPosition = await new Promise(reject => {
+          uni.createSelectorQuery().in(this.$refs.header).select(".cart").boundingClientRect(rect => {
+            reject({
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2
+            })
+          }).exec()
+        })
+        // #endif
+        this.shoppingCartBall = startPosition
+        this.shoppingCartBallShow = true
+
+        await app.$threadSleep(50)
+        this.shoppingCartBall = endPosition
+        await app.$threadSleep(750)
+        this.shoppingCartBallShow = false
+        this.shoppingCartBallMoving = false // 设置节流属性
+        this.shoppingCartTotal++
+        this.shoppingCartBall = startPosition
+      },
+      scrollToProperty() {
+        // #ifdef APP-NVUE
+        dom.scrollToElement(this.$refs.property, {
+          offset: -(this.headerHeight - 12) // header高度减去property样式填充的高度
+        })
+        // #endif
+        // #ifndef APP-NVUE
+        this.scrollTop = this.oldScrollTop
+        this.$nextTick(() => {
+          this.scrollTop = this.propertyElementTop - this.headerHeight + 12
+        })
+        // #endif
+      },
+      clickPropertyOption(property, option) {
+        property.options.forEach(x => {
+          this.$set(x, 'checked', false)
+          x.checked = false
+        })
+        this.$set(option, 'checked', true)
+      },
+      scroll(e) {
+        let scrollTop = e.scrollTop <= 0 ? 0 : e.scrollTop
+        this.oldScrollTop = scrollTop
+        let scrollDiff = 4
+        this.pictureTop = scrollTop / scrollDiff // 滚动视差效果在小程序效果不是很好，卡顿很明显，原因是scroll-view滚动事件采样的精度较大，赋值给视差背景元素时间隔较大，所以看起来卡顿。在样式上加了点过渡效果，让它看起来顺滑一点
+        let transparentHeight = this.systemInfo.windowWidth
+        let opacityCoefficient = scrollTop / transparentHeight
+        let opacity = opacityCoefficient > 1 ? 1 : opacityCoefficient
+        this.headerOpacity = opacity
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        } else if (e.position === 'right' && e.index === 0) {
+          // 跳转到购物车页
+          app.$switchTab('/pages/index/index', 'cart')
+        }
+      },
+      isMultiline(text, fontSize, maxWidth) {
+        // var text = '支持nvue超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长超长换行'
+        // var maxWidth = uni.upx2px(582) // 最大宽度
+        // var fontSize = 13 // 字体大小
+        var textLength = text.replace(/[\u0391-\uFFE5]/g, "aa").length / 2 // 把中文替换成2个字符，2个字符才能有fontSize的大小，所以要除2
+        var maxTextLength = Math.floor(maxWidth / fontSize)
+
+        // 判断文字是否需要换行(nvue只有定宽才会换行)
+        if (textLength > maxTextLength) {
+          return true
+        } else {
+          return false
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .pictures {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    transform: translateY(0);
+    /* #ifndef APP-NVUE */
+    transition-property: transform;
+    transition-duration: 0.1s;
+    transition-timing-function: linear;
+    /* #endif */
+  }
+
+  .pictures-item {
+    flex: 1;
+  }
+
+  .pictures-item-img {}
+
+  .btns {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+    right: 28px;
+  }
+
+  .btn {
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    margin-bottom: 16px;
+  }
+
+  .btn-favorite {
+    background-color: #FFFFFF;
+  }
+
+  .btn-share {
+    background-color: #CFCFCF;
+  }
+
+  .btn-icon {
+    font-size: 18px;
+  }
+
+  .content-box {
+    position: relative;
+    z-index: 3;
+  }
+
+  .content {
+    /* margin-top: -34px; */
+    padding: 0 28px 90px 28px;
+    border-top-left-radius: 34px;
+    border-top-right-radius: 34px;
+  }
+
+  .content-title {
+    padding-top: 34px;
+  }
+
+  .content-title-text {
+    font-size: 23px;
+    font-weight: 700;
+  }
+
+  .content-comment {
+    margin-top: 12px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .content-comment-rate {
+    flex-direction: row;
+  }
+
+  .content-comment-rate-star {
+    color: #FFC592;
+    margin-right: 5px;
+  }
+
+  .content-comment-rate-star-line {
+    color: #DFDFDF;
+  }
+  
+  .content-comment-count {
+    margin-left: 10px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .content-price {
+    margin-top: 24px;
+  }
+
+  .content-price-text {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .content-desc {
+    margin-top: 18px;
+  }
+
+  .content-desc-text {
+    font-size: 13px;
+  }
+
+  .content-property-item {
+    margin-top: 24px;
+    padding-top: 12px;
+  }
+
+  .content-property-title-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .content-property-option {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .content-property-option-item {
+    justify-content: center;
+    align-items: center;
+    margin: 12px 12px 0 0;
+    padding: 12px 14px;
+    /* background-color: #F7F7F7; */
+    border-radius: 12px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0);
+  }
+
+  .content-property-option-item-text {
+    font-size: 13px;
+    line-height: 17px;
+    font-weight: 400;
+  }
+
+  .content-detail {
+    margin-top: 36px;
+  }
+
+  .content-detail-title {
+    margin-bottom: 12px;
+  }
+
+  .content-detail-title-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .content-detail-item {
+    flex-direction: row;
+  }
+
+  .content-detail-item-img {
+    flex: 1;
+    /* #ifndef APP-NVUE */
+    /* width: 100%;
+  	display: block; */
+    /* #endif */
+  }
+
+  .footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 3;
+    padding: 18px 28px;
+    border-top-left-radius: 34px;
+    border-top-right-radius: 34px;
+    /* background-color: #FFFFFF; */
+    box-shadow: 0 0 4px #E0E0E0;
+  }
+
+  .footer-btns {
+    flex-direction: row;
+  }
+
+  .footer-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 54px;
+    border-radius: 12px;
+    /* background-color: #F5F5F5; */
+  }
+
+  .footer-btn-text {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .footer-btn-spec {
+    flex: 0.4;
+  }
+
+  .footer-btn-spec-text {
+    color: #393939;
+  }
+
+  .footer-btn-spec-icon {
+    font-size: 16px;
+    color: #393939;
+  }
+
+  .footer-btn-buy {
+    position: relative;
+    flex: 0.6;
+    margin-left: 10px;
+    /* background-color: #F76842; */
+  }
+
+  .footer-btn-buy-text {
+    color: #FFFFFF;
+  }
+
+  .cart-ball {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    transition-property: top, left;
+    transition-duration: 0.5s;
+    box-shadow: 0 4px 8px #595959;
+  }
+</style>

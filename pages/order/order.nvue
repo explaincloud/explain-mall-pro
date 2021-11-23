@@ -1,0 +1,304 @@
+<template>
+  <em-page class="favorite" :em-styles="pageStyles">
+    <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+      <em-header-inset></em-header-inset>
+      <view class="em-panel" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+        <view class="em-panel-header panel-header">
+          <text class="em-panel-header-title panel-header-title" :style="[$em.$getThemeStyle(['color-1'])]">我的订单</text>
+        </view>
+      </view>
+      <view class="tab-bar" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+        <view class="tab-bar-item" v-for="(x, xi) in tabBar" :key="xi" @click="switchTabBar(xi)">
+          <text class="tab-bar-item-text" :style="[tabBarCurrentIndex===xi?$em.$getThemeStyle(['color-3']):$em.$getThemeStyle(['color-6'])]">{{x.text}}</text>
+          <!-- 又是离谱级问题,在安卓nvue居然闪一下就没了,切换主题之后又有了,这么6掰?与主题无关,因为设置固定样式它都不会出来,与v-if无关,样式只要不设置为圆就可以显示,问题是这里的代码和tabbar组件是一样的,原因到底是什么?真是要恶心吐了 -->
+          <!-- 解决了,卧槽...可以说是非常无语了,居然要给父容器设置背景颜色才能显示,离天下之大谱,一点也不科学啊,xxxxxx -->
+          <view class="tab-bar-item-oval" :style="[$em.$getThemeStyle(['bg-color-3'])]" v-if="tabBarCurrentIndex===xi"></view>
+        </view>
+      </view>
+      <view class="list">
+        <view class="list-item" :style="[$em.$getThemeStyle(['bg-color-1'])]" v-for="(x, xi) in orders" :key="xi">
+          <view class="list-item-info">
+            <text class="list-item-info-id" :style="[$em.$getThemeStyle(['color-1'])]">订单#{{x.id}}</text>
+            <text class="list-item-info-time" :style="[$em.$getThemeStyle(['color-6'])]">{{x.createTime}}</text>
+          </view>
+          <view class="goods-list">
+            <view class="goods-list-item" v-for="(xx, xxi) in x.goods" :key="xxi">
+              <view class="goods-list-item-image-wrap">
+                <image class="goods-list-item-image" :src="xx.image" mode="aspectFill"></image>
+              </view>
+              <view class="goods-list-item-info">
+                <text class="goods-list-item-info-title" :style="[$em.$getThemeStyle(['color-1'])]">{{xx.title}}</text>
+                <text class="goods-list-item-info-spec" :style="[$em.$getThemeStyle(['color-6'])]">{{xx.spec}}</text>
+                <view class="goods-list-item-info-total">
+                  <text class="goods-list-item-info-price" :style="[$em.$getThemeStyle(['color-1'])]">￥{{xx.price}}</text><text class="goods-list-item-info-quantity">×{{xx.quantity}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="list-item-operate">
+            <view class="list-item-operate-btn list-item-operate-btn-left" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="$em.$navigateTo(`/pages/order/detail?id=${x.id}`)">
+              <text class="list-item-operate-btn-text" :style="[$em.$getThemeStyle(['color-101'])]">订单详情</text>
+            </view>
+            <view class="list-item-operate-btn list-item-operate-btn-right" :style="[$em.$getThemeStyle(['bg-color-0101'])]">
+              <text class="list-item-operate-btn-text" :style="[$em.$getThemeStyle(['color-0101'])]">获取帮助</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </em-scroller>
+    <em-header-search class="header" :em-styles="headerStyles" :search-btn="headerSearchBtn" :left-btns="headerLeftBtns" v-model="query" @confirm="confirmSearch" @clickBtn="clickHeaderBtn" placeholder="搜索订单..."></em-header-search>
+  </em-page>
+</template>
+
+<script>
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        query: '',
+        orders: [],
+        tabBar: [{
+          name: 'all',
+          text: '全部'
+        }, {
+          name: 'paid',
+          text: '已付款'
+        }, {
+          name: 'completed',
+          text: '已完成'
+        }, {
+          name: 'cancelled',
+          text: '已取消'
+        }],
+        tabBarCurrentIndex: 0
+      }
+    },
+    computed: {
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          input: app.$getThemeStyle(['bg-color-2', 'color-1']),
+          placeholder: app.$getThemeStyle(['color-6'])
+        }
+      },
+      headerSearchBtn() {
+        return {
+          iconUnicode: '\uf0d1',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-101']),
+            icon: app.$getThemeStyle(['color-101'])
+          }
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad() {
+      this.getOrderList()
+    },
+    methods: {
+      getOrderList() {
+        app.$api.getOrderList({
+          query: this.query,
+          type: this.tabBar[this.tabBarCurrentIndex].name
+        }).then(res => {
+          this.orders = res.data
+        })
+      },
+      switchTabBar(index) {
+        this.tabBarCurrentIndex = index
+        this.getOrderList()
+      },
+      confirmSearch(e) {
+        if (e.value) {
+          uni.showToast({
+            icon: 'none',
+            title: `搜索：${e.value}`
+          })
+        }
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .panel-header {
+    padding: 24px 28px;
+  }
+
+  .panel-header-title {
+    font-size: 21px;
+  }
+
+  .tab-bar {
+    flex-direction: row;
+    padding: 0 28px;
+  }
+
+  .tab-bar-item {
+    align-items: center;
+    margin-right: 28px;
+  }
+
+  .tab-bar-item-text {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .tab-bar-item-oval {
+    width: 5px;
+    height: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    background-color: #292929;
+  }
+
+  .list {
+    padding-bottom: 28px;
+  }
+
+  .list-item {
+    margin: 28px 28px 0 28px;
+    padding: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .list-item-info {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .list-item-info-id {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .list-item-info-time {
+    font-size: 12px;
+  }
+
+  .goods-list {
+    /* margin-top: 20px; */
+  }
+
+  .goods-list-item {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .goods-list-item-image {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+  }
+
+  .goods-list-item-info {
+    flex: 1;
+    margin-left: 18px;
+  }
+
+  .goods-list-item-info-title {
+    line-height: 19px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .goods-list-item-info-spec {
+    margin-top: 4px;
+    line-height: 19px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .goods-list-item-info-total {
+    flex-direction: row;
+    margin-top: 10px;
+  }
+
+  .goods-list-item-info-price {
+    font-size: 13px;
+  }
+
+  .goods-list-item-info-quantity {
+    margin-left: 7px;
+    font-size: 13px;
+    color: #808080;
+  }
+
+  .list-item-operate {
+    margin-top: 28px;
+    flex-direction: row;
+  }
+
+  .list-item-operate-btn {
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    height: 42px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .list-item-operate-btn-left {
+    margin-right: 10px;
+  }
+
+  .list-item-operate-btn-right {
+    margin-left: 10px;
+  }
+
+  .list-item-operate-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>

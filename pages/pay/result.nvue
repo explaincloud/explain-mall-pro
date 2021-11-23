@@ -1,0 +1,255 @@
+<template>
+  <em-page class="pay-result" :em-styles="pageStyles">
+    <view class="wrap" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+      <view class="success" v-if="isSuccess">
+        <view class="msg" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+          <em-icon class="icon" :style="[$em.$getThemeStyle(['color-3'])]" :unicode="'\ueb81'"></em-icon>
+          <text class="title" :style="[$em.$getThemeStyle(['color-1'])]">恭喜你！</text>
+          <text class="desc" :style="[$em.$getThemeStyle(['color-7'])]">您的订单已成功下单！</text>
+          <text class="desc" :style="[$em.$getThemeStyle(['color-7'])]">请继续关注，因为您的商品很快就会发货。</text>
+        </view>
+        <view class="bottom" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <text class="tips" :style="[$em.$getThemeStyle(['color-1'])]">还有很多有趣的商品等待你探索</text>
+          <view class="btn" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="back">
+            <text class="btn-text" :style="[$em.$getThemeStyle(['color-101'])]">继续浏览</text>
+          </view>
+        </view>
+      </view>
+      <view class="fail" v-else>
+        <view class="msg" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+          <em-icon class="icon" :style="[$em.$getThemeStyle(['color-8'])]" :unicode="'\ueb97'"></em-icon>
+          <text class="title" :style="[$em.$getThemeStyle(['color-1'])]">支付失败！</text>
+          <text class="desc" :style="[$em.$getThemeStyle(['color-7'])]">您的付款方式有问题，请重新检查并</text>
+          <text class="desc" :style="[$em.$getThemeStyle(['color-7'])]">再试一次。</text>
+        </view>
+        <view class="bottom" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <text class="tips" :style="[$em.$getThemeStyle(['color-1'])]">现在想做什么？</text>
+          <view class="btn" :style="[$em.$getThemeStyle(['bg-color-109'])]" @click="pay">
+            <text class="btn-text" :style="[$em.$getThemeStyle(['color-109'])]">重新支付</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <em-header class="header" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn">
+      <view slot="right" class="header-right" :style="[headerRight]">
+        <view class="header-right-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]">
+          <em-icon class="header-right-btn-icon" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\uef06'"></em-icon>
+        </view>
+        <view class="header-right-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+        <view class="header-right-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]">
+          <em-icon class="header-right-btn-icon" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\uea90'"></em-icon>
+        </view>
+        <view class="header-right-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+        <view class="header-right-btn" :style="[isSuccess?$em.$getThemeStyle(['bg-color-101']):$em.$getThemeStyle(['bg-color-105'])]">
+          <em-icon class="header-right-btn-icon" :style="[isSuccess?$em.$getThemeStyle(['color-101']):$em.$getThemeStyle(['color-105'])]" :unicode="'\ueb81'"></em-icon>
+        </view>
+      </view>
+    </em-header>
+  </em-page>
+</template>
+
+<script>
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        isSuccess: false
+      }
+    },
+    computed: {
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      },
+      headerRight() {
+        let top = 16
+        let right = 28
+        let systemInfo = uni.getSystemInfoSync()
+        // #ifdef APP-PLUS
+        top = systemInfo.statusBarHeight + 4
+        // #endif
+        // #ifdef MP-WEIXIN
+        let menuButtonBoundingClientRect = uni.getMenuButtonBoundingClientRect()
+        top = menuButtonBoundingClientRect.top - ((36 - menuButtonBoundingClientRect.height) / 2)
+        right = (systemInfo.windowWidth - menuButtonBoundingClientRect.right) * 2 + menuButtonBoundingClientRect.width
+        // #endif
+        return {
+          'top': `${top}px`,
+          'right': `${right}px`
+        }
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    methods: {
+      back() {
+        app.$switchTab('/pages/index/index', 'search')
+      },
+      pay() {
+        uni.showLoading({
+          title: '支付中...'
+        })
+        setTimeout(() => {
+          this.isSuccess = true
+          uni.hideLoading()
+        }, 500)
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+  }
+
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .header-right {
+    position: fixed;
+    flex-direction: row;
+    align-items: center;
+    /* margin-left: 18px; */
+  }
+
+  .header-right-cut {
+    /* #ifndef MP-WEIXIN */
+    width: 28px;
+    /* #endif */
+    /* #ifdef MP-WEIXIN */
+    width: 18px;
+    /* #endif */
+    margin: 0 5px;
+    border-top-width: 1px;
+    border-style: dashed;
+  }
+
+  .header-right-btn {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .header-right-btn {
+    transition-property: background-color;
+    transition-duration: 0.25s;
+  }
+
+  .header-right-btn-icon {
+    display: flex;
+    align-items: center;
+    font-size: 17px;
+  }
+
+  .fail {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .success {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .msg {
+    /* flex: 0.5; */
+    justify-content: center;
+    align-items: center;
+    padding: 0 28px 165px 28px;
+  }
+
+  .icon {
+    font-size: 96px;
+  }
+
+  .title {
+    margin-top: 16px;
+    margin-bottom: 24px;
+    line-height: 29px;
+    font-size: 29px;
+    font-weight: 700;
+  }
+
+  .desc {
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 36px 28px 28px 28px;
+    border-radius: 34px 34px 0 0;
+  }
+
+  .tips {
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .btn {
+    justify-content: center;
+    align-items: center;
+    height: 58px;
+    margin-top: 24px;
+    border-radius: 12px;
+  }
+
+  .btn-text {
+    font-size: 14px;
+  }
+</style>

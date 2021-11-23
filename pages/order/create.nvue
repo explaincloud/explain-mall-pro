@@ -1,0 +1,700 @@
+<template>
+  <em-page class="order-create" :em-styles="pageStyles">
+    <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+      <em-header-inset></em-header-inset>
+      <view class="em-panel" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+        <view class="em-panel-header panel-header">
+          <text class="em-panel-header-title panel-header-title" :style="[$em.$getThemeStyle(['color-1'])]">创建订单</text>
+        </view>
+      </view>
+      <view class="em-panel panel-content-wrap" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+        <view class="em-panel-content">
+          <view class="address">
+            <view class="address-title">
+              <text class="address-title-left" :style="[$em.$getThemeStyle(['color-1'])]">收货地址</text>
+              <text class="address-title-right" :style="[$em.$getThemeStyle(['color-6'])]">修改地址</text>
+            </view>
+            <view class="address-info">
+              <text class="address-info-consignee" :style="[$em.$getThemeStyle(['color-6'])]">张三</text>
+              <text class="address-info-mobile" :style="[$em.$getThemeStyle(['color-6'])]">15111111111</text>
+              <text class="address-info-name" :style="[$em.$getThemeStyle(['color-6'])]">{{address.name}}</text>
+            </view>
+            <view class="address-detail">
+              <text class="address-detail-title" :style="[$em.$getThemeStyle(['color-1'])]">详细地址</text>
+              <text class="address-detail-content" :style="[$em.$getThemeStyle(['color-6'])]">{{address.province+address.city+address.country+address.detail}}</text>
+            </view>
+            <view class="address-map-box">
+              <view class="address-map-wrap">
+                <!-- 要实现一个能拖动，不覆盖的圆角map -->
+                <map class="address-map" :longitude="map.longitude" :latitude="map.latitude" :markers="map.markers"></map>
+                <!-- 在iOS真机微信小程序，H5和安卓nvue无法设置map圆角，使用同层view绘制阴影覆盖可实现圆角效果，不支持iOS nvue，实现不出内圆角，但是安卓nvue无法使用条件编译，怎么办呢 -->
+                <!-- 自行实现平台条件判断渲染 -->
+                <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="address-map-cover address-map-cover-top-left" :style="[{'box-shadow': `-12px -12px 0 0 ${$em.$getThemeStyle(['bg-color-1'])['background-color']}`}]"></view>
+                <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="address-map-cover address-map-cover-top-right" :style="[{'box-shadow': `12px -12px 0 0 ${$em.$getThemeStyle(['bg-color-1'])['background-color']}`}]"></view>
+                <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="address-map-cover address-map-cover-bottom-left" :style="[{'box-shadow': `-12px 12px 0 0 ${$em.$getThemeStyle(['bg-color-1'])['background-color']}`}]"></view>
+                <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="address-map-cover address-map-cover-bottom-right" :style="[{'box-shadow': `12px 12px 0 0 ${$em.$getThemeStyle(['bg-color-1'])['background-color']}`}]"></view>
+              </view>
+            </view>
+          </view>
+          <view class="goods">
+            <view class="goods-title">
+              <text class="goods-title-left" :style="[$em.$getThemeStyle(['color-1'])]">购物车</text>
+              <text class="goods-title-right" :style="[$em.$getThemeStyle(['color-6'])]">{{goods.length}} 商品</text>
+            </view>
+            <view class="goods-list">
+              <view class="goods-list-item" v-for="(x, xi) in goods" :key="xi">
+                <view class="goods-list-item-thumbnail">
+                  <image class="goods-list-item-thumbnail-img" :src="x.thumbnail_url" mode="aspectFill"></image>
+                </view>
+                <view class="goods-list-item-info">
+                  <view class="goods-list-item-info-top"><text class="goods-list-item-info-title" :style="[$em.$getThemeStyle(['color-1'])]">{{x.title}}</text><text class="goods-list-item-info-spec">颜色灰白</text></view>
+                  <view class="goods-list-item-info-bottom"><text class="goods-list-item-info-price" :style="[$em.$getThemeStyle(['color-1'])]">￥{{x.price}}</text><text class="goods-list-item-info-quantity">×2</text></view>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="remark">
+            <view class="remark-title">
+              <text class="remark-left" :style="[$em.$getThemeStyle(['color-1'])]">订单备注</text>
+            </view>
+            <view class="remark-content">
+              <view class="remark-text-area-box" :style="[$em.$getThemeStyle(['bg-color-2'])]">
+                <textarea class="remark-text-area" :style="[$em.$getThemeStyle(['color-1'])]" auto-height maxlength="300" placeholder="最多300字哦~"></textarea>
+              </view>
+            </view>
+          </view>
+          <view class="payment">
+            <view class="payment-title">
+              <text class="payment-left" :style="[$em.$getThemeStyle(['color-1'])]">支付方式</text>
+            </view>
+            <view class="payment-list">
+              <view class="payment-list-item" :style="[$em.$getThemeStyle(['bg-color-2'])]" v-for="(x, xi) in paymentMethod" :key="xi">
+                <view class="payment-list-item-left">
+                  <view class="payment-list-item-left-icon">
+                    <image class="payment-list-item-left-icon-img" :src="x.iconPath"></image>
+                  </view>
+                  <text class="payment-list-item-left-name" :style="[$em.$getThemeStyle(['color-1'])]">{{x.name}}</text>
+                </view>
+                <view class="payment-list-item-right">
+                  <view class="payment-list-item-right-btn" :style="[x.checked?$em.$getThemeStyle(['bg-color-101']):$em.$getThemeStyle(['bg-color-106'])]" @click="selectPaymentMethod(x)">
+                    <em-icon class="payment-list-item-right-btn-icon" :style="[x.checked?$em.$getThemeStyle(['color-101']):$em.$getThemeStyle(['color-106'])]" :unicode="'\ueb7b'"></em-icon>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="total">
+            <view class="total-box" :style="[{'border-color': $em.$getThemeStyle(['bg-color-2'])['background-color']}]">
+              <view class="total-left"><text class="total-left-text" :style="[$em.$getThemeStyle(['color-1'])]">总计</text></view>
+              <view class="total-right"><text class="total-right-symbol" :style="[$em.$getThemeStyle(['color-1'])]">￥</text><text class="total-right-amount" :style="[$em.$getThemeStyle(['color-1'])]">300.00</text></view>
+            </view>
+          </view>
+          <view class="submit">
+            <view class="submit-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="clickSubmit">
+              <text class="submit-btn-text" :style="[$em.$getThemeStyle(['color-101'])]">提交订单</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </em-scroller>
+    <em-header class="header" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn">
+      <view slot="right" class="header-right" :style="[headerRight]">
+        <view class="header-right-btn" :style="[addressIsValidated?$em.$getThemeStyle(['bg-color-101']):$em.$getThemeStyle(['bg-color-105'])]">
+          <em-icon class="header-right-btn-icon" :style="[addressIsValidated?$em.$getThemeStyle(['color-101']):$em.$getThemeStyle(['color-105'])]" :unicode="'\uef06'"></em-icon>
+        </view>
+        <view class="header-right-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+        <view class="header-right-btn" :style="[paymentMethodIsValidated?$em.$getThemeStyle(['bg-color-101']):$em.$getThemeStyle(['bg-color-105'])]">
+          <em-icon class="header-right-btn-icon" :style="[paymentMethodIsValidated?$em.$getThemeStyle(['color-101']):$em.$getThemeStyle(['color-105'])]" :unicode="'\uea90'"></em-icon>
+        </view>
+        <view class="header-right-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+        <view class="header-right-btn" :style="[$em.$getThemeStyle(['bg-color-105'])]">
+          <em-icon class="header-right-btn-icon" :style="[$em.$getThemeStyle(['color-105'])]" :unicode="'\ueb81'"></em-icon>
+        </view>
+      </view>
+    </em-header>
+  </em-page>
+</template>
+
+<script>
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        address: {
+          name: '德润·朗悦湾',
+          province: '云南省',
+          city: '昆明市',
+          country: '五华区',
+          detail: '银河大道与沣源路交汇处(和谐世纪往北200米)'
+        },
+        map: {
+          longitude: 102.743655,
+          latitude: 25.118518,
+          markers: [{
+            id: 1000, // nvue必填，不然无法显示iconPath
+            longitude: 102.743655,
+            latitude: 25.118518,
+            iconPath: '/static/img/user/avatar.jpg@radius.png',
+            width: 36,
+            height: 36
+          }]
+        },
+        goods: [{
+          thumbnail_url: '/static/img/goods/1.png',
+          title: '原创设计瓶子',
+          price: 23.00
+        }, {
+          thumbnail_url: '/static/img/goods/2.png',
+          title: '原创设计瓶子',
+          price: 23.00
+        }],
+        paymentMethod: [{
+          name: '微信支付',
+          iconPath: '/static/img/icon/icon-weixinpay.png'
+        }, {
+          name: '支付宝',
+          iconPath: '/static/img/icon/icon-alipay.png'
+        }]
+      }
+    },
+    computed: {
+      ...mapState(['userInfo']),
+      PLATFORM() {
+        // 因为项目使用的是nvue，所以不需要考虑APP-VUE
+        // 目前支持以下平台
+        const platform = {
+          'H5': 'H5',
+          'MPWEIXIN': 'MP-WEIXIN',
+          'APPANDROID': 'APP-ANDROID',
+          'APPIOS': 'APP-IOS'
+        }
+        let result = ''
+        // #ifdef H5
+        result = platform.H5
+        // #endif
+        // #ifdef MP-WEIXIN
+        result = platform.MPWEIXIN
+        // #endif
+        // #ifdef APP-PLUS
+        switch (uni.getSystemInfoSync().platform) {
+          case 'android':
+            result = platform.APPANDROID
+            break
+          case 'ios':
+            result = platform.APPIOS
+            break
+        }
+        // #endif
+        return result
+      },
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      },
+      headerRight() {
+        let top = 16
+        let right = 28
+        let systemInfo = uni.getSystemInfoSync()
+        // #ifdef APP-PLUS
+        top = systemInfo.statusBarHeight + 4
+        // #endif
+        // #ifdef MP-WEIXIN
+        let menuButtonBoundingClientRect = uni.getMenuButtonBoundingClientRect()
+        top = menuButtonBoundingClientRect.top - ((36 - menuButtonBoundingClientRect.height) / 2)
+        right = (systemInfo.windowWidth - menuButtonBoundingClientRect.right) * 2 + menuButtonBoundingClientRect.width
+        // #endif
+        return {
+          'top': `${top}px`,
+          'right': `${right}px`
+        }
+      },
+      addressIsValidated() {
+        // 检查收货地址信息是否是完整的
+        for (let key in this.address) {
+          if (!this.address[key]) {
+            return false
+          }
+        }
+        return true
+      },
+      paymentMethodIsValidated() {
+        return this.paymentMethod.filter(x => x.checked).length > 0
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    methods: {
+      clickSubmit() {
+        if (!this.addressIsValidated) {
+          uni.showToast({
+            icon: 'none',
+            title: '收货地址信息不完整'
+          })
+          return
+        }
+        if (!this.paymentMethodIsValidated) {
+          uni.showToast({
+            icon: 'none',
+            title: '请选择支付方式'
+          })
+          return
+        }
+        uni.showLoading({
+          title: '订单提交中...'
+        })
+        setTimeout(() => {
+          uni.showLoading({
+            title: '支付中...'
+          })
+          setTimeout(() => {
+            app.$redirectTo('/pages/pay/result')
+            uni.hideLoading()
+          }, 1000)
+        }, 1000)
+      },
+      selectPaymentMethod(item) {
+        this.paymentMethod.forEach(x => this.$set(x, 'checked', false))
+        item.checked = true
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .header-right {
+    position: fixed;
+    flex-direction: row;
+    align-items: center;
+    /* margin-left: 18px; */
+  }
+
+  .header-right-cut {
+    /* #ifndef MP-WEIXIN */
+    width: 28px;
+    /* #endif */
+    /* #ifdef MP-WEIXIN */
+    width: 18px;
+    /* #endif */
+    margin: 0 5px;
+    border-top-width: 1px;
+    border-style: dashed;
+  }
+
+  .header-right-btn {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .header-right-btn {
+    transition-property: background-color;
+    transition-duration: 0.25s;
+  }
+
+  .header-right-btn-icon {
+    display: flex;
+    align-items: center;
+    font-size: 17px;
+  }
+
+  .scroller {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .panel-header {
+    padding: 24px 28px;
+  }
+
+  .panel-header-title {
+    font-size: 21px;
+  }
+
+  .panel-content-wrap {
+    border-radius: 28px 28px 0 0;
+  }
+
+  .address {
+    padding-top: 32px;
+  }
+
+  .address-title {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 28px;
+  }
+
+  .address-title-left {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .address-title-right {
+    font-size: 14px;
+    font-weight: 700;
+    color: #9093A2;
+  }
+
+  .address-info {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0 28px;
+    margin-top: 20px;
+  }
+
+  .address-info-consignee {
+    margin-right: 10px;
+    font-size: 14px;
+  }
+
+  .address-info-mobile {
+    margin-right: 10px;
+    font-size: 14px;
+  }
+
+  .address-info-name {
+    font-size: 14px;
+  }
+
+  .address-detail {
+    padding: 0 28px;
+    margin-top: 14px;
+  }
+
+  .address-detail-title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .address-detail-content {
+    margin-top: 14px;
+    font-size: 14px;
+  }
+
+  .address-map-box {
+    flex-direction: row;
+    padding: 0 28px;
+    margin-top: 20px;
+  }
+
+  .address-map-wrap {
+    flex: 1;
+    flex-direction: row;
+    position: relative;
+  }
+
+  .address-map {
+    flex: 1;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .address-map-cover {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+  }
+
+  .address-map-cover-top-left {
+    top: 0px;
+    left: 0px;
+    box-shadow: -12px -12px 0 0;
+  }
+
+  .address-map-cover-top-right {
+    top: 0px;
+    right: 0px;
+    box-shadow: 12px -12px 0 0;
+  }
+
+  .address-map-cover-bottom-left {
+    bottom: 0px;
+    left: 0px;
+    box-shadow: -12px 12px 0 0;
+  }
+
+  .address-map-cover-bottom-right {
+    bottom: 0px;
+    right: 0px;
+    box-shadow: 12px 12px 0 0;
+  }
+
+  .goods {
+    margin-top: 28px;
+    padding: 20px 0;
+  }
+
+  .goods-title {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 28px;
+  }
+
+  .goods-title-left {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .goods-title-right {
+    font-size: 14px;
+    font-weight: 700;
+    color: #9093A2;
+  }
+
+  .goods-list {
+    /* margin-top: 20px; */
+  }
+
+  .goods-list-item {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 20px;
+    padding: 0 28px;
+  }
+
+  .goods-list-item-thumbnail-img {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+  }
+
+  .goods-list-item-info {
+    margin: 0 18px;
+  }
+
+  .goods-list-item-info-top {
+    flex-direction: row;
+  }
+
+  .goods-list-item-info-title {
+    line-height: 19px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .goods-list-item-info-spec {
+    margin-left: 7px;
+    line-height: 19px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #808080;
+  }
+
+  .goods-list-item-info-bottom {
+    flex-direction: row;
+    margin-top: 10px;
+  }
+
+  .goods-list-item-info-price {
+    font-size: 13px;
+  }
+
+  .goods-list-item-info-quantity {
+    margin-left: 7px;
+    font-size: 13px;
+    color: #808080;
+  }
+
+  .remark {
+    padding-top: 32px;
+  }
+
+  .remark-title {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 28px;
+  }
+
+  .remark-left {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .remark-content {
+    flex-direction: row;
+    margin-top: 20px;
+    padding: 0 28px;
+  }
+
+  .remark-text-area-box {
+    flex: 1;
+    flex-direction: row;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .remark-text-area {
+    flex: 1;
+    font-size: 14px;
+  }
+
+  .payment {
+    padding-top: 52px;
+  }
+
+  .payment-title {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 28px;
+  }
+
+  .payment-left {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .payment-list {
+    padding: 0 28px 28px 28px;
+  }
+
+  .payment-list-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 84px;
+    padding: 0 20px;
+    margin-top: 20px;
+    border-radius: 12px;
+    background-color: #F7F7F7;
+  }
+
+  .payment-list-item-left {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .payment-list-item-left-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .payment-list-item-left-icon-img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .payment-list-item-left-name {
+    margin-left: 10px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .payment-list-item-right-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 38px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .payment-list-item-right-btn-icon {
+    font-size: 18px;
+  }
+
+  .total {
+    padding: 0 28px;
+  }
+
+  .total-box {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 16px;
+    border-top: 2px solid #F0F0F0;
+  }
+
+  .total-left-text {
+    font-size: 15px;
+    line-height: 15px;
+  }
+
+  .total-right {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .total-right-symbol {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 15px;
+  }
+
+  .total-right-amount {
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 21px;
+  }
+
+  .submit {
+    margin-top: 32px;
+    padding: 28px;
+  }
+
+  .submit-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 58px;
+    border-radius: 12px;
+  }
+
+  .submit-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>

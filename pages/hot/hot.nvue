@@ -1,0 +1,230 @@
+<template>
+  <em-page class="hot" :em-styles="pageStyles">
+    <view class="content" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+      <swiper class="swiper" :current="currentIndex" @change="changeSwiper">
+        <swiper-item class="swiper-item" v-for="(x, xi) in goods" :key="xi">
+          <image class="swiper-image" :style="{'width': `${systemInfo.windowWidth}px`, 'height': `${systemInfo.windowHeight}px`}" :src="x.image" mode="aspectFill"></image>
+          <view class="swiper-image-mask"></view>
+        </swiper-item>
+      </swiper>
+    </view>
+    <view class="strip">
+      <view class="strip-list" :style="{'transform': `translateX(${-currentIndex*(systemInfo.windowWidth-100+20)}px)`}">
+        <view class="strip-list-item" :style="[{'width': `${systemInfo.windowWidth-100}px`}, $em.$getThemeStyle(['bg-color-1', 'shadow-2'])]" v-for="(x, xi) in goods" :key="xi">
+          <view class="strip-list-item-info" @click="$em.$navigateTo(`/pages/goods/goods?id=${x.id}`)">
+            <view class="strip-list-item-info-title">
+              <text class="strip-list-item-info-title-text em-text-ellipsis-1" :style="[$em.$getThemeStyle(['color-1'])]">{{x.title}}{{x.title}}{{x.title}}</text>
+            </view>
+            <view class="strip-list-item-info-price">
+              <text class="strip-list-item-info-reference-price-text" :style="[$em.$getThemeStyle(['color-6'])]">￥{{x.referencePrice}}</text>
+              <text class="strip-list-item-info-price-text" :style="[$em.$getThemeStyle(['color-1'])]">￥{{x.price}}</text>
+            </view>
+          </view>
+          <view class="strip-list-item-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]">
+            <em-icon class="strip-list-item-btn-icon" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\ueae5'"></em-icon>
+          </view>
+        </view>
+      </view>
+    </view>
+    <em-header class="header" title="热门商品" :em-styles="headerStyles" :left-btns="headerLeftBtns" :right-btns="headerRightBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </em-page>
+</template>
+
+<script>
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        currentIndex: 0,
+        goods: []
+      }
+    },
+    computed: {
+      ...mapState([
+        'systemInfo'
+      ]),
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: {
+            ...app.$getThemeStyle(['bg-color-1', 'shadow-0']),
+            'opacity': 0
+          },
+          title: {
+            'color': '#F7F7F7'
+          }
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      },
+      headerRightBtns() {
+        return [{
+          name: 'cart',
+          iconUnicode: '\uf120',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-101']),
+            icon: app.$getThemeStyle(['color-101'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad() {
+      this.getHotList()
+    },
+    methods: {
+      getHotList() {
+        uni.showLoading({
+          title: '加载中...'
+        })
+        app.$api.getHotList().then(res => {
+          this.goods = res.data
+          uni.hideLoading()
+        })
+      },
+      changeSwiper(e) {
+        this.currentIndex = e.detail.current
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        } else if (e.position === 'right' && e.index === 0) {
+          // 跳转到购物车页
+          app.$switchTab('/pages/index/index', 'cart')
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .content {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .swiper {
+    flex: 1;
+  }
+
+  .swiper-item {
+    position: relative;
+    flex: 1;
+  }
+
+  .swiper-image {}
+
+  .swiper-image-mask {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .strip {
+    position: fixed;
+    bottom: 32px;
+    left: 0;
+    /* 不能设置right，不然在安卓nvue超出right的话，就算后续元素平移过来也无法将其显示 */
+    /* right: 0; */
+  }
+
+  .strip-list {
+    flex-direction: row;
+    margin-left: 30px;
+    transform: translateX(0);
+    transition-property: transform;
+    transition-duration: 0.25s;
+  }
+
+  .strip-list-item {
+    height: 90px;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    margin-left: 20px;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 24px;
+    
+  }
+  
+  .strip-list-item-info {
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .strip-list-item-info-title-text {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  
+  .strip-list-item-info-price {
+    flex-direction: row;
+    margin-top: 5px;
+  }
+  
+  .strip-list-item-info-reference-price-text {
+    font-size: 15px;
+    text-decoration: line-through;
+  }
+  
+  .strip-list-item-info-price-text {
+    font-size: 15px;
+    margin-left: 5px;
+  }
+  
+  .strip-list-item-btn {
+    width: 38px;
+    height: 44px;
+    border-radius: 9px;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+  }
+  
+  .strip-list-item-btn-icon {
+    font-size: 16px;
+  }
+</style>

@@ -1,0 +1,299 @@
+<template>
+  <em-page class="index">
+    <em-tab class="tab" ref="tab" :em-styles="tabStyles" :list="tabs" :current="currentTabIndex" @change="changeTab">
+      <template v-slot="{tab}">
+        <index v-if="tab.name === 'index'" :ref="tab.name" @loaded="loadedTab($event, tab)"></index>
+        <search v-else-if="tab.name === 'search'" :ref="tab.name" @loaded="loadedTab($event, tab)"></search>
+        <cart v-else-if="tab.name === 'cart'" :ref="tab.name" @loaded="loadedTab($event, tab)"></cart>
+        <my v-else-if="tab.name === 'my'" :ref="tab.name" @loaded="loadedTab($event, tab)"></my>
+        <demo v-else-if="tab.name === 'demo1'" :ref="tab.name" @loaded="loadedTab($event, tab)"></demo>
+        <demo v-else-if="tab.name === 'demo2'" :ref="tab.name" @loaded="loadedTab($event, tab)"></demo>
+        <demo v-else-if="tab.name === 'demo3'" :ref="tab.name" @loaded="loadedTab($event, tab)"></demo>
+      </template>
+    </em-tab>
+    <em-tab-bar class="tab-bar" :em-styles="tabBarStyles" :list="tabs" :current="currentTabIndex" @click="clickTabBar" :enable-group="true" :each-group-quantity="4"></em-tab-bar>
+  </em-page>
+</template>
+
+<script>
+  import Index from './tabs/index/index'
+  import Search from './tabs/search/search'
+  import Cart from './tabs/cart/cart'
+  import My from './tabs/my/my'
+  import Demo from './tabs/demo/demo'
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    components: {
+      Index,
+      Search,
+      Cart,
+      My,
+      Demo
+    },
+    data() {
+      return {
+        tabs: [{
+          name: 'index', // 页面名称，标识，唯一
+          text: '首页', // 在底部导航栏展示的文本
+          iconName: 'remixicon', // 在底部导航栏展示的图标库名称，这里选自remixicon，可在em-icon扩展其他字体库
+          iconUnicode: '\uee2b' // 在底部导航栏展示的图标字符编码，选自remixicon
+        }, {
+          name: 'search',
+          text: '搜索',
+          iconName: 'remixicon',
+          iconUnicode: '\uf0d1'
+        }, {
+          name: 'cart',
+          text: '购物车',
+          iconName: 'remixicon',
+          iconUnicode: '\uf120'
+        }, {
+          name: 'my',
+          text: '我的',
+          iconName: 'remixicon',
+          iconUnicode: '\uf256'
+        }, {
+          name: 'demo1',
+          text: '示例1',
+          iconName: 'remixicon',
+          iconUnicode: '\ueae5'
+        }, {
+          name: 'demo2',
+          text: '示例2',
+          iconName: 'remixicon',
+          iconUnicode: '\ueced'
+        }, {
+          name: 'demo3',
+          text: '示例3',
+          iconName: 'remixicon',
+          iconUnicode: '\uef1a'
+        }],
+        currentTabIndex: 0,
+        previousTabIndex: 0,
+        isPageOnShow: true,
+        isPageOnHide: true
+      }
+    },
+    watch: {
+      currentTabName(newVal, oldVal) {
+        let pages = getCurrentPages()
+        let currentPage = pages[pages.length - 1]
+        if (currentPage.route != 'pages/index/index') {
+          return
+        }
+        let tab = this.tabs.filter(x => x.name === newVal)[0]
+        if (tab) {
+          this.currentTabIndex = this.tabs.indexOf(tab)
+          this.isPageOnShow = false
+          this.isPageOnHide = false
+        }
+      }
+    },
+    computed: {
+      ...mapState(['currentTabName']),
+      // 组件props给计算属性或属性内使用方法，微信小程序报警告 [Component] property received type-uncompatible value: expected <Object> but got non-object value. Used null instead.解决办法，要么切换调试基础库，要么忽略，这个不影响
+      tabStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      tabBarStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          itemTextActive: app.$getThemeStyle(['color-3']),
+          itemOvalActive: app.$getThemeStyle(['bg-color-3']),
+          itemIcon: app.$getThemeStyle(['color-1'])
+        }
+      }
+    },
+    created() {
+      this.$em = app.$em
+      this.tabs.push({
+        name: 'theme',
+        text: '换肤',
+        iconName: 'remixicon',
+        iconUnicode: '\uf1d5',
+        noSelect: true,
+        noPage: true
+      })
+    },
+    onLoad(options) {
+      let tab = this.tabs.filter(x => x.name === options.tab)[0]
+      if (tab) {
+        this.currentTabIndex = this.tabs.indexOf(tab)
+      }
+    },
+    onShow() {
+      app.$setStatusBarStyle(app.$getTheme()) // 保证页面切换回来，状态栏颜色依旧保持与主题色对应
+      // H5切换tab会触发onShow和onHide，所以需要记录触发状态，不然会造成tab生命周期重复调用
+      // #ifdef H5
+      if (this.isPageOnShow) {
+        this.showTab(this.currentTabIndex)
+      } else {
+        this.showTab(this.currentTabIndex)
+      }
+      this.isPageOnShow = true
+      // #endif
+      // #ifndef H5
+      this.showTab(this.currentTabIndex)
+      // #endif
+    },
+    onHide() {
+      // H5切换tab会触发onShow和onHide，所以需要记录触发状态，不然会造成tab生命周期重复调用
+      // #ifdef H5
+      if (this.isPageOnHide) {
+        this.hideTab(this.currentTabIndex)
+        this.isNotCurrentPage = true
+      } else {
+        this.hideTab(this.previousTabIndex)
+      }
+      this.isPageOnHide = true
+      // #endif
+      // #ifndef H5
+      this.hideTab(this.currentTabIndex)
+      this.isNotCurrentPage = true
+      // #endif
+    },
+    methods: {
+      showTab(index) {
+        let tab = this.tabs[index]
+        if (!tab.loaded || tab.showed) {
+          return
+        }
+        // 触发show事件
+        // ref获取，因为tab子组件是在slot里面的，直接this.$refs获取不到，需要在em-tab上加一个ref属性才可以获取到，只需加上ref即可，不需要做其他操作
+        let refCurr = this.$refs[tab.name]
+        refCurr && refCurr.show && refCurr.show()
+        this.$set(tab, 'showed', true)
+      },
+      hideTab(index) {
+        let tab = this.tabs[index]
+        if (!tab.loaded || !tab.showed) {
+          return
+        }
+        // 触发hide事件
+        let refPrev = this.$refs[tab.name]
+        refPrev && refPrev.hide && refPrev.hide()
+        this.$set(tab, 'showed', false)
+      },
+      /**
+       * tab子组件加载完毕，触发show
+       */
+      loadedTab(e, {
+        name
+      }) {
+        let tab = this.tabs.filter(x => x.name === name)[0]
+        let index = this.tabs.indexOf(tab)
+        this.$set(tab, 'loaded', true)
+        this.showTab(index)
+      },
+      changeTab(e) {
+        let currIndex = e.detail.current
+        let prevIndex = e.detail.previous
+        let currTab = this.tabs[currIndex]
+        let prevTab = this.tabs[prevIndex]
+        if (this.currentTabIndex != currIndex) {
+          this.currentTabIndex = currIndex
+        }
+        this.previousTabIndex = prevIndex
+        // page hide
+        if (prevTab.loaded) {
+          this.hideTab(prevIndex)
+        }
+        // page show
+        if (currTab.loaded) {
+          this.showTab(currIndex)
+        }
+        this.prevTab = prevTab
+        this.currTab = currTab
+        this.replaceRoute(currTab)
+      },
+      clickTabBar(e) {
+        let index = e.index
+        let tab = this.tabs[index]
+        if (!tab.noSelect) {
+          // this.currentTabIndex = index
+          app.$switchTab('/pages/index/index', tab.name)
+        }
+        if (tab.name === 'theme') {
+          let theme = app.$getTheme()
+          if (theme === 'dark') {
+            app.$setTheme('light') // 切换回默认主题
+            uni.showToast({
+              icon: 'none',
+              title: '切换主题：默认'
+            })
+          } else {
+            app.$setTheme('dark') // 切换到暗黑主题
+            uni.showToast({
+              icon: 'none',
+              title: '切换主题：暗黑'
+            })
+          }
+          // ...其他主题扩展
+        }
+      },
+      replaceRoute(tab) {
+        // #ifdef H5
+        // H5端替换tab路由
+        // uni.navigateTo也可以实现浏览器地址变化,但是会触发onShow和onHide事件，导致tab子组件show，hide重复调用。现已解决
+        uni.navigateTo({
+          url: '/pages/index/index?tab=' + tab.name,
+          success: () => {
+            uni.setNavigationBarTitle({
+              title: tab.text
+            })
+          }
+        })
+        // window.history.replaceState不会添加到栈，所以从二级页面返回时会刷新，uni.navigateTo不会
+        // window.history.replaceState({
+        //   name
+        // }, '', `#/?tab=${name}`)
+        // #endif
+      }
+    }
+  }
+</script>
+
+<style>
+  /* 编译模式选择了uniapp nvue，在非nvue平台会自动加上一些样式，以达到与nvue一致，而微信小程序不支持标签选择器，所以报 Some selectors are not allowed in component wxss, including tag name selectors, ID selectors, and attribute selectors. */
+
+  .index {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .tab {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .tab-bar {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    z-index: 999;
+  }
+</style>

@@ -1,0 +1,27 @@
+.em-panel {
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.em-panel-header {
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 28px 28px 24px 28px;
+}
+
+.em-panel-header-title {
+  font-size: 21px;
+  /* font-size: 28px; */
+  font-weight: 700;
+}
+
+.em-text-ellipsis-1 {
+  text-overflow: ellipsis;
+  lines: 1;
+  /* #ifndef APP-NVUE */
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  /* #endif */
+}

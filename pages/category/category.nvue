@@ -1,0 +1,372 @@
+<template>
+  <em-page class="category" :em-styles="pageStyles">
+    <view class="banner" :style="{'height': `${systemInfo.windowHeight}px`}">
+      <view class="banner-image-wrap">
+        <image class="banner-image" :style="{'height': `${systemInfo.windowHeight}px`}" src="/static/img/category/1.jpg" mode="aspectFill"></image>
+      </view>
+      <view class="banner-mask"></view>
+      <view class="banner-word" :style="{'top': `${systemInfo.windowWidth*0.68*0.5+systemInfo.statusBarHeight*0.5}px`, 'left': `${systemInfo.windowWidth*0.5}px`}">
+        <text class="banner-word-title">家具</text>
+        <text class="banner-word-info">500+</text>
+      </view>
+    </view>
+    <em-scroller class="scroller" @scroll="scroll">
+      <view class="banner-inset" :style="{'height': `${systemInfo.windowWidth*0.68+systemInfo.statusBarHeight-28}px`}"></view>
+      <view class="content-wrap">
+        <view class="content" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <view class="children">
+            <scroll-view class="children-scroll-view" :scroll-x="true">
+              <view class="children-list">
+                <view class="children-list-item-wrap children-list-item-first-child">
+                  <view class="children-list-item" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                    <text class="children-list-item-text" :style="[$em.$getThemeStyle(['color-9'])]">全部</text>
+                  </view>
+                </view>
+                <view class="children-list-item-wrap">
+                  <view class="children-list-item" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                    <text class="children-list-item-text" :style="[$em.$getThemeStyle(['color-9'])]">桌子</text>
+                  </view>
+                </view>
+                <view class="children-list-item-wrap">
+                  <view class="children-list-item" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                    <text class="children-list-item-text" :style="[$em.$getThemeStyle(['color-9'])]">凳子</text>
+                  </view>
+                </view>
+                <view class="children-list-item-wrap">
+                  <view class="children-list-item" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                    <text class="children-list-item-text" :style="[$em.$getThemeStyle(['color-9'])]">沙发</text>
+                  </view>
+                </view>
+                <view class="children-list-item-wrap">
+                  <view class="children-list-item" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                    <text class="children-list-item-text" :style="[$em.$getThemeStyle(['color-9'])]">茶几</text>
+                  </view>
+                </view>
+                <view class="children-list-item-wrap children-list-item-last-child">
+                  <view class="children-list-item" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                    <text class="children-list-item-text" :style="[$em.$getThemeStyle(['color-9'])]">电视柜</text>
+                  </view>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+          <view class="goods">
+            <view class="goods-list">
+              <!-- 临时替代瀑布流组件，瀑布流组件还未开发nvue版本 -->
+              <view class="goods-item" :style="[{'width': `${systemInfo.windowWidth/2-36}px`}]" v-for="(x, xi) in goods" :key="xi" @click="$em.$navigateTo('/pages/goods/goods?id='+x.id)">
+                <view class="goods-item-image-wrap" :style="{'height': `${systemInfo.windowWidth*0.53}px`}">
+                  <image class="goods-item-image" :src="x.image" mode="aspectFill"></image>
+                  <view class="goods-item-btn-favorite">
+                    <em-icon class="goods-item-btn-favorite-icon" :unicode="'\ueae5'"></em-icon>
+                  </view>
+                </view>
+                <view class="goods-item-info">
+                  <text class="goods-item-title" :style="[$em.$getThemeStyle(['color-1'])]">{{x.title}}</text>
+                  <text class="goods-item-price" :style="[$em.$getThemeStyle(['color-1'])]">￥{{x.price.toFixed(2)}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="loadmore">
+          <text class="loadmore-text" v-if="loadmoreState === 'loadmore'">上拉加载更多</text>
+          <text class="loadmore-text" v-else-if="loadmoreState === 'loading'">正在加载...</text>
+          <text class="loadmore-text" v-else-if="loadmoreState === 'nomore'">没有更多了</text>
+        </view>
+      </view>
+    </em-scroller>
+    <em-header class="header" ref="header" title="商品类别" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </em-page>
+</template>
+
+<script>
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        headerOpacity: 0,
+        goods: [],
+        goodsPageIndex: 1,
+        loadmoreState: 'loadmore'
+      }
+    },
+    computed: {
+      ...mapState([
+        'systemInfo'
+      ]),
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: {
+            ...app.$getThemeStyle(['bg-color-1', this.headerOpacity >= 1 ? 'shadow-1' : 'shadow-0']),
+            'opacity': this.headerOpacity
+          },
+          title: {
+            ...app.$getThemeStyle(['color-1']),
+            'opacity': this.headerOpacity
+          }
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad() {
+      this.getGoodsList()
+    },
+    methods: {
+      scroll(e) {
+        let scrollTop = e.scrollTop <= 0 ? 0 : e.scrollTop
+        let transparentHeight = (this.systemInfo.windowWidth * 0.68 + this.systemInfo.statusBarHeight) / 2
+        let opacityCoefficient = scrollTop / transparentHeight
+        let opacity = opacityCoefficient > 1 ? 1 : opacityCoefficient
+        this.headerOpacity = opacity
+
+        if (e.scrollBottom <= 150) {
+          this.loadmore()
+        }
+      },
+      loadmore() {
+        if (this.loadmoreState === 'loadmore') {
+          console.log('index on loadmore')
+          this.getGoodsList()
+        }
+      },
+      getGoodsList() {
+        this.loadmoreState = 'loading'
+        app.$api.getGoodsList({
+          pageIndex: this.goodsPageIndex,
+          pageSize: 20
+        }).then(res => {
+          res.data.forEach((x, xi) => this.goods.push(x))
+          if (this.goods.length >= res.total) {
+            this.loadmoreState = 'nomore'
+            return
+          }
+          this.goodsPageIndex++
+          this.loadmoreState = 'loadmore'
+        })
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .banner {
+    /* position: sticky; */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .banner-image-wrap {
+    flex-direction: row;
+  }
+
+  .banner-image {
+    flex: 1;
+  }
+
+  .banner-mask {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.28);
+  }
+
+  .banner-word {
+    position: absolute;
+    justify-content: center;
+    height: 80px;
+    transform: translate(-50%, -50%);
+  }
+
+  .banner-word-title {
+    text-align: center;
+    font-size: 29px;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+
+  .banner-word-info {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #FFFFFF;
+  }
+
+  .content-wrap {
+    margin-top: -28px;
+  }
+  
+  .content {
+    border-radius: 28px;
+  }
+
+  .children {
+    padding-top: 38px;
+  }
+  
+  .children-scroll-view {
+    flex-direction: row;
+    flex: 1;
+  }
+
+  .children-list {
+    flex-direction: row;
+    /* 预留一点滚动条的位置 */
+    padding-bottom: 14px;
+  }
+
+  .children-list-item-wrap {
+    padding-left: 10px;
+  }
+
+  .children-list-item-first-child {
+    padding-left: 28px;
+  }
+
+  .children-list-item-last-child {
+    padding-right: 28px;
+  }
+
+  .children-list-item {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 12px;
+    height: 50px;
+    padding: 0 32px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .children-list-item-text {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .goods {
+    padding-top: 14px;
+  }
+
+  .goods-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 12px;
+  }
+
+  .goods-item {
+    padding-bottom: 24px;
+    margin-left: 16px;
+  }
+
+  .goods-item-image-wrap {
+    position: relative;
+  }
+
+  .goods-item-image {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    /* #ifndef APP-NVUE */
+    display: block;
+    width: 100%;
+    /* #endif */
+    border-radius: 12px;
+  }
+
+  .goods-item-btn-favorite {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background-color: #FFFFFF;
+  }
+
+  .goods-item-btn-favorite-icon {
+    font-size: 15px;
+    color: #292929;
+  }
+
+  .goods-item-title {
+    margin-top: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 20px;
+  }
+
+  .goods-item-price {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .loadmore {
+    justify-content: center;
+    align-items: center;
+    height: 56px;
+  }
+
+  .loadmore-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+</style>

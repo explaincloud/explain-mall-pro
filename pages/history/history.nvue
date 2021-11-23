@@ -1,0 +1,243 @@
+<template>
+  <em-page class="history" :em-styles="pageStyles">
+    <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+      <em-header-inset></em-header-inset>
+      <view class="em-panel" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+        <view class="em-panel-header panel-header">
+          <text class="em-panel-header-title panel-header-title" :style="[$em.$getThemeStyle(['color-1'])]">浏览历史</text>
+        </view>
+      </view>
+      <view class="em-panel panel-content-wrap" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+        <view class="em-panel-content">
+          <view class="group" v-for="(x, xi) in histories" :key="xi">
+            <view class="group-title">
+              <text class="group-title-text" :style="[$em.$getThemeStyle(['color-1'])]">{{x.month}}月{{x.date}}日</text>
+            </view>
+            <view class="list">
+              <view class="list-item" v-for="(xx, xxi) in x.goods" :key="xxi" @click="$em.$navigateTo('/pages/goods/goods?id='+xx.id)">
+                <view class="list-item-left">
+                  <view class="list-item-image-wrap">
+                    <image class="list-item-image" :src="xx.image"></image>
+                  </view>
+                  <view class="list-item-info">
+                    <text class="list-item-title" :style="[$em.$getThemeStyle(['color-1'])]">{{xx.title}}</text>
+                    <text class="list-item-price" :style="[$em.$getThemeStyle(['color-1'])]">￥{{xx.price.toFixed(2)}}</text>
+                  </view>
+                </view>
+                <view class="list-item-right">
+                  <view class="list-item-operate">
+                    <view class="list-item-btn" :style="[$em.$getThemeStyle(['bg-color-108'])]">
+                      <em-icon class="list-item-btn-icon" :unicode="'\uec2a'" :style="[$em.$getThemeStyle(['color-108'])]"></em-icon>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="loadmore">
+        <text class="loadmore-text" :style="[$em.$getThemeStyle(['color-6'])]">仅展示近30天的记录哦~</text>
+      </view>
+    </em-scroller>
+    <em-header-search class="header" :em-styles="headerStyles" :search-btn="headerSearchBtn" :left-btns="headerLeftBtns" v-model="keywords" @confirm="confirmSearch" @clickBtn="clickHeaderBtn" placeholder="搜索商品..."></em-header-search>
+  </em-page>
+</template>
+
+<script>
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        /* 搜索关键词 */
+        keywords: '',
+        histories: []
+      }
+    },
+    computed: {
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          input: app.$getThemeStyle(['bg-color-2', 'color-1']),
+          placeholder: app.$getThemeStyle(['color-6'])
+        }
+      },
+      headerSearchBtn() {
+        return {
+          iconUnicode: '\uf0d1',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-101']),
+            icon: app.$getThemeStyle(['color-101'])
+          }
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad() {
+      this.getHistoryList()
+    },
+    methods: {
+      getHistoryList() {
+        app.$api.getHistoryList().then(res => {
+          res.data.forEach(x => {
+            var browseDate = new Date(x.browseTime.replace(/-/g, '/'))
+            var month = browseDate.getMonth()
+            var date = browseDate.getDate()
+            var filter = this.histories.filter(xx => xx.month == month && xx.date == date)[0]
+            if (filter) {
+              filter.goods.push(x)
+            } else {
+              this.histories.push({
+                month,
+                date,
+                goods: [x]
+              })
+            }
+          })
+        })
+      },
+      confirmSearch(e) {
+        if (e.value) {
+          uni.showToast({
+            icon: 'none',
+            title: `搜索：${e.value}`
+          })
+        }
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .panel-header {
+    padding: 24px 28px;
+  }
+
+  .panel-header-title {
+    font-size: 21px;
+  }
+
+  .panel-content-wrap {
+    /* border-radius: 28px 28px 0 0; */
+    padding-bottom: 28px;
+  }
+
+  .group {
+    padding-top: 28px;
+  }
+
+  .group-title {
+    padding: 0 28px;
+  }
+
+  .group-title-text {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .list {
+    padding: 0 28px;
+  }
+
+  .list-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+  }
+
+  .list-item-left {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .list-item-image {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+  }
+
+  .list-item-info {
+    margin-left: 18px;
+  }
+
+  .list-item-title {
+    line-height: 19px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .list-item-price {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .list-item-btn {
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .loadmore {
+    justify-content: center;
+    align-items: center;
+    height: 56px;
+  }
+
+  .loadmore-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>

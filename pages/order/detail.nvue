@@ -1,0 +1,374 @@
+<template>
+  <em-page class="order-detail" :em-styles="pageStyles">
+    <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+      <em-header-inset></em-header-inset>
+      <view class="body" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+        <view class="state" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <view class="state-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]">
+            <em-icon class="state-btn-icon" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\uea90'"></em-icon>
+          </view>
+          <view class="state-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+          <view class="state-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]">
+            <em-icon class="state-btn-icon" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\uea48'"></em-icon>
+          </view>
+          <view class="state-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+          <view class="state-btn" :style="[$em.$getThemeStyle(['bg-color-105'])]">
+            <em-icon class="state-btn-icon" :style="[$em.$getThemeStyle(['color-105'])]" :unicode="'\uf231'"></em-icon>
+          </view>
+          <view class="state-cut" :style="[$em.$getThemeStyle(['bd-color-1'])]"></view>
+          <view class="state-btn" :style="[$em.$getThemeStyle(['bg-color-105'])]">
+            <em-icon class="state-btn-icon" :style="[$em.$getThemeStyle(['color-105'])]" :unicode="'\ueb81'"></em-icon>
+          </view>
+        </view>
+        <view class="column em-panel" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <view class="em-panel-header">
+            <text class="em-panel-header-title panel-header-title" :style="[$em.$getThemeStyle(['color-1'])]">订单商品</text>
+            <text class="panel-header-quantity" :style="[$em.$getThemeStyle(['color-6'])]">{{order.goods.length}} 商品</text>
+          </view>
+          <view class="em-panel-content">
+            <scroll-view class="column-scroll-view" :scroll-x="true">
+              <view class="column-list">
+                <view class="column-item" v-for="(x, xi) in order.goods" :key="xi" :class="[xi===0?'column-item-first-child':'', xi===order.goods.length-1?'column-item-last-child':'']" @click="$em.$navigateTo('/pages/goods/goods?id='+x.id)">
+                  <view class="column-item-image-wrap">
+                    <image class="column-item-image" :src="x.image" mode="aspectFill">
+                    </image>
+                    <view class="column-item-btn-favorite">
+                      <em-icon class="column-item-btn-favorite-icon" :unicode="'\ueae5'"></em-icon>
+                    </view>
+                  </view>
+                  <view class="column-item-info">
+                    <text class="column-item-title" :style="[$em.$getThemeStyle(['color-1'])]">{{x.title}}</text>
+                    <text class="column-item-spec" :style="[$em.$getThemeStyle(['color-6'])]">{{x.spec}}</text>
+                    <view class="column-item-total">
+                      <text class="column-item-price" :style="[$em.$getThemeStyle(['color-1'])]">￥{{x.price.toFixed(2)}}</text>
+                      <text class="column-item-quantity">×{{x.quantity}}</text>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </scroll-view>
+          </view>
+        </view>
+        <view class="panel-content-wrap" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+          <view class="panel-content">
+            <view class="info">
+              <view class="info-title">
+                <text class="info-title-label" :style="[$em.$getThemeStyle(['color-1'])]">订单#{{id}}</text>
+                <text class="info-title-value" :style="[$em.$getThemeStyle(['color-6'])]">{{order.createTime}}</text>
+              </view>
+              <view class="info-row">
+                <text class="info-row-label" :style="[$em.$getThemeStyle(['color-1'])]">商品价格</text>
+                <text class="info-row-value" :style="[$em.$getThemeStyle(['color-1'])]">￥{{totalGoodsPrice}}</text>
+              </view>
+              <view class="info-row">
+                <text class="info-row-label" :style="[$em.$getThemeStyle(['color-1'])]">运费</text>
+                <text class="info-row-value" :style="[$em.$getThemeStyle(['color-1'])]">￥12</text>
+              </view>
+              <view class="info-total" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+                <text class="info-total-label" :style="[$em.$getThemeStyle(['color-1'])]">总计</text>
+                <text class="info-total-value" :style="[$em.$getThemeStyle(['color-1'])]">￥{{totalGoodsPrice + 12}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </em-scroller>
+    <em-header class="header" title="订单详情" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </em-page>
+</template>
+
+<script>
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        id: '',
+        order: {
+          goods: []
+        }
+      }
+    },
+    computed: {
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      },
+      totalGoodsPrice() {
+        let result = 0
+        this.order.goods.forEach(x => result += x.price * x.quantity)
+        return result
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad(options) {
+      this.id = options.id
+      this.getOrderInfo()
+    },
+    methods: {
+      getOrderInfo() {
+        app.$api.getOrderInfo({
+          id: this.id
+        }).then(res => {
+          this.order = res.data
+          console.log(this.order)
+        })
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .body {
+    
+  }
+
+  .panel-header {
+    padding: 24px 28px;
+  }
+
+  .panel-header-title {
+    font-size: 21px;
+  }
+
+  .panel-header-quantity {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .column {
+    margin-top: 28px;
+    transition-property: background-color;
+    transition-duration: 0.25s;
+  }
+
+  .column-scroll-view {
+    flex-direction: row;
+    flex: 1;
+  }
+
+  .column-list {
+    flex-direction: row;
+  }
+
+  .column-item {
+    padding: 0 16px 16px 0;
+  }
+
+  .column-item-first-child {
+    padding-left: 28px;
+  }
+
+  .column-item-last-child {
+    padding-right: 28px;
+  }
+
+  .column-item-image-wrap {
+    position: relative;
+  }
+
+  .column-item-image {
+    position: relative;
+    z-index: 1;
+    /* #ifndef APP-NVUE */
+    display: block;
+    /* #endif */
+    width: 154px;
+    height: 200px;
+    border-radius: 12px;
+  }
+
+  .column-item-btn-favorite {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background-color: #FFFFFF;
+  }
+
+  .column-item-btn-favorite-icon {
+    font-size: 15px;
+    color: #292929;
+  }
+
+  .column-item-title {
+    margin-top: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 20px;
+  }
+
+  .column-item-spec {
+    margin-top: 4px;
+    line-height: 19px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .column-item-total {
+    flex-direction: row;
+    margin-top: 10px;
+  }
+
+  .column-item-price {
+    font-size: 13px;
+  }
+
+  .column-item-quantity {
+    margin-left: 7px;
+    font-size: 13px;
+    color: #808080;
+  }
+
+  .panel-content-wrap {
+    margin-top: 28px;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .panel-content {
+    padding: 0 28px 32px 28px;
+  }
+
+  .info {}
+
+  .info-title {
+    margin-top: 20px;
+    margin-bottom: 14px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .info-title-label {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .info-title-value {
+    font-size: 13px;
+  }
+
+  .info-row {
+    margin-top: 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .info-row-label {
+    font-size: 15px;
+  }
+
+  .info-row-value {
+    font-size: 15px;
+  }
+
+  .info-total {
+    margin-top: 20px;
+    padding-top: 20px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-style: solid;
+    border-top-width: 1px;
+  }
+
+  .info-total-label {
+    font-size: 16px;
+  }
+
+  .info-total-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .state {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px;
+    border-radius: 0 0 28px 28px;
+  }
+
+  .state-btn {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+
+  .state-btn {
+    transition-property: background-color;
+    transition-duration: 0.25s;
+  }
+
+  .state-btn-icon {
+    display: flex;
+    align-items: center;
+    font-size: 17px;
+  }
+
+  .state-cut {
+    flex: 1;
+    margin: 0 8px;
+    border-top-width: 1px;
+    border-style: dashed;
+  }
+</style>

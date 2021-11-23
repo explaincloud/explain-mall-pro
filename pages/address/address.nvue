@@ -1,0 +1,329 @@
+<template>
+  <em-page class="address" :em-styles="pageStyles">
+    <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
+      <em-header-inset></em-header-inset>
+      <view class="add" :style="[$em.$getThemeStyle(['bg-color-1'])]" @click="$em.$navigateTo('/pages/address/add')">
+        <view class="add-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]">
+          <em-icon class="add-btn-icon" :unicode="'\uea13'" :style="[$em.$getThemeStyle(['color-101'])]"></em-icon>
+        </view>
+        <text class="add-text" :style="[$em.$getThemeStyle(['color-1'])]">添加新地址</text>
+      </view>
+      <view class="list">
+        <view class="list-item" :style="[$em.$getThemeStyle(['bg-color-1'])]" v-for="(x, xi) in addresses" :key="xi">
+          <view class="list-item-map-wrap">
+            <map class="list-item-map" :longitude="x.longitude" :latitude="x.latitude - 0.0003" :markers="getMarkers(x, xi)"></map>
+            <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="list-item-map-cover list-item-map-cover-top-left" :style="[{'box-shadow': `-12px -12px 0 0 ${$em.$getThemeStyle(['bg-color--1'])['background-color']}`}]"></view>
+            <view v-if="PLATFORM==='APP-ANDROID'||PLATFORM==='MP-WEIXIN'||PLATFORM==='H5'" class="list-item-map-cover list-item-map-cover-top-right" :style="[{'box-shadow': `12px -12px 0 0 ${$em.$getThemeStyle(['bg-color--1'])['background-color']}`}]"></view>
+          </view>
+          <view class="list-item-info-wrap" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+            <view class="list-item-info">
+              <view class="list-item-info-title">
+                <text class="list-item-info-name" :style="[$em.$getThemeStyle(['color-1'])]">{{x.name}}</text>
+                <view class="list-item-info-default" :style="[$em.$getThemeStyle(['bg-color-101'])]" v-if="x.default"><text class="list-item-info-default-text" :style="[$em.$getThemeStyle(['color-101'])]">默认</text></view>
+              </view>
+              <text class="list-item-info-address" :style="[$em.$getThemeStyle(['color-9'])]">{{`${x.province} ${x.city} ${x.country} ${x.detail}`}}</text>
+            </view>
+            <view class="list-item-bottom">
+              <view class="list-item-bottom-info">
+                <text class="list-item-info-consignee" :style="[$em.$getThemeStyle(['color-6'])]">{{x.consignee}}</text>
+                <text class="list-item-info-mobile" :style="[$em.$getThemeStyle(['color-6'])]">{{x.mobile}}</text>
+              </view>
+              <view class="list-item-bottom-btns">
+                <view class="list-item-bottom-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="$em.$navigateTo('/pages/address/add?type=edit&id=')">
+                  <em-icon class="list-item-bottom-btn-icon" :style="[$em.$getThemeStyle(['color-101'])]" :unicode="'\uec80'"></em-icon>
+                </view>
+                <view class="list-item-bottom-btn" :style="[$em.$getThemeStyle(['bg-color-107'])]" @click="remove(x, xi)">
+                  <em-icon class="list-item-bottom-btn-icon" :style="[$em.$getThemeStyle(['color-107'])]" :unicode="'\uec2a'"></em-icon>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </em-scroller>
+    <em-header class="header" title="我的地址" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </em-page>
+</template>
+
+<script>
+  import {
+    mapState
+  } from 'vuex'
+
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+        addresses: []
+      }
+    },
+    computed: {
+      ...mapState(['userInfo']),
+      PLATFORM() {
+        // 因为项目使用的是nvue，所以不需要考虑APP-VUE
+        // 目前支持以下平台
+        const platform = {
+          'H5': 'H5',
+          'MPWEIXIN': 'MP-WEIXIN',
+          'APPANDROID': 'APP-ANDROID',
+          'APPIOS': 'APP-IOS'
+        }
+        let result = ''
+        // #ifdef H5
+        result = platform.H5
+        // #endif
+        // #ifdef MP-WEIXIN
+        result = platform.MPWEIXIN
+        // #endif
+        // #ifdef APP-PLUS
+        switch (uni.getSystemInfoSync().platform) {
+          case 'android':
+            result = platform.APPANDROID
+            break
+          case 'ios':
+            result = platform.APPIOS
+            break
+        }
+        // #endif
+        return result
+      },
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    onLoad() {
+      this.getAddressList()
+    },
+    methods: {
+      getAddressList() {
+        app.$api.getAddressList().then(res => {
+          this.addresses = res.data
+        })
+      },
+      remove(address, index) {
+        uni.showToast({
+          icon: 'success',
+          title: '删除成功'
+        })
+        this.addresses.splice(index, 1)
+      },
+      getMarkers(address, index) {
+        return [{
+          id: 1000 + index, // nvue必填，不然无法显示iconPath
+          longitude: address.longitude,
+          latitude: address.latitude,
+          iconPath: this.userInfo.avatar + '@radius.png',
+          width: 36,
+          height: 36
+        }]
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .scroller {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .add {
+    flex-direction: row;
+    align-items: center;
+    margin: 28px 28px 0 28px;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .add-btn {
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 44px;
+    border-radius: 12px;
+    background-color: #FFFFFF;
+  }
+
+  .add-btn-icon {
+    font-size: 20px;
+    color: #292929;
+  }
+
+  .add-text {
+    margin-left: 20px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .list {
+    margin-top: 8px;
+    padding-bottom: 28px;
+  }
+
+  .list-item {
+    margin: 20px 28px 0 28px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .list-item-map-wrap {
+    flex: 1;
+    flex-direction: row;
+    position: relative;
+  }
+
+  .list-item-map {
+    flex: 1;
+    height: 170px;
+    /* iOSnvue不能绘制单边圆角，要么全部圆角，要么都不圆角 */
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .list-item-map-cover {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+  }
+
+  .list-item-map-cover-top-left {
+    top: 0px;
+    left: 0px;
+    box-shadow: -12px -12px 0 0;
+  }
+
+  .list-item-map-cover-top-right {
+    top: 0px;
+    right: 0px;
+    box-shadow: 12px -12px 0 0;
+  }
+
+  .list-item-info-wrap {
+    flex: 1;
+    /* 上移盖住map的下边两个角的圆角 */
+    margin-top: -50px;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+  }
+
+  .list-item-info {
+    padding: 20px 20px 0 20px;
+  }
+
+  .list-item-info-title {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .list-item-info-name {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .list-item-info-default {
+    background-color: #FF0000;
+    height: 16px;
+    padding: 0 8px;
+    justify-content: center;
+    border-radius: 4px;
+    margin-left: 10px;
+  }
+
+  .list-item-info-default-text {
+    line-height: 10px;
+    font-size: 10px;
+    color: #FFFFFF;
+  }
+
+  .list-item-info-address {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+
+  .list-item-bottom {
+    /* margin-top: 10px; */
+    padding: 0 20px 20px 20px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .list-item-bottom-info {
+    flex-direction: row;
+    flex: 1;
+  }
+
+  .list-item-info-consignee {
+    font-size: 13px;
+  }
+
+  .list-item-info-mobile {
+    margin-left: 20px;
+    font-size: 13px;
+  }
+
+  .list-item-bottom-btns {
+    flex-direction: row;
+  }
+
+  .list-item-bottom-btn {
+    margin-left: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .list-item-bottom-btn-icon {
+    font-size: 17px;
+  }
+</style>
