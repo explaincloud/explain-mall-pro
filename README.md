@@ -43,8 +43,8 @@
 * [x] 我的足迹 pages/history/history
 * [x] 热门商品 pages/hot/hot
 * [x] 用户评论 pages/goods/comment
-* [ ] 登录 pages/login/login
-* [ ] 注册 pages/register/register
+* [x] 登录 pages/login/login
+* [x] 注册 pages/register/register
 
 ## 注意事项
 ### 安卓nvue阴影失效
