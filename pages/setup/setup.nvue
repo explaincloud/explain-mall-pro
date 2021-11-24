@@ -1,0 +1,96 @@
+<template>
+  <em-page class="setup" :em-styles="pageStyles">
+    <em-header-inset></em-header-inset>
+    <view class="logout">
+      <view class="logout-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="clickLogout">
+        <text class="logout-btn-text" :style="[$em.$getThemeStyle(['color-101'])]">退出登录</text>
+      </view>
+    </view>
+    <em-header class="header" title="设置" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </em-page>
+</template>
+
+<script>
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+
+      }
+    },
+    computed: {
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color--1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    methods: {
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      },
+      clickLogout() {
+        app.$navigateTo('/pages/login/login')
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .logout {
+    padding: 28px;
+  }
+
+  .logout-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 58px;
+    border-radius: 12px;
+  }
+
+  .logout-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>

@@ -88,6 +88,9 @@ module.exports = {
   'color-9': {
     'color': '#777777'
   },
+  'color-10': {
+    'color': '#D2D2D2'
+  },
   // 10X表示按钮的文字或图标颜色
   'color-101': {
     'color': '#FFFFFF'

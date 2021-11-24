@@ -89,6 +89,11 @@
       "style": {
         "navigationBarTitleText": "注册"
       }
+    }, {
+      "path": "pages/setup/setup",
+      "style": {
+        "navigationBarTitleText": "设置"
+      }
     }
   ],
   "globalStyle": {

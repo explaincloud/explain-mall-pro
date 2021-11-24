@@ -1,5 +1,5 @@
 <template>
-  <em-page class="address-add" :em-styles="pageStyles">
+  <em-page class="goods-comment" :em-styles="pageStyles">
     <em-scroller class="scroller" :style="[$em.$getThemeStyle(['bg-color--1'])]">
       <em-header-inset></em-header-inset>
       <view class="average" :style="[$em.$getThemeStyle(['bg-color--1'])]">

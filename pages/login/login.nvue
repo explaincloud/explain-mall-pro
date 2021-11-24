@@ -1,0 +1,219 @@
+<template>
+  <em-page class="login" :em-styles="pageStyles">
+    <em-header-inset></em-header-inset>
+    <view class="form" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+      <view class="form-row">
+        <view class="form-icon" :style="[$em.$getThemeStyle(['bg-color-2'])]">
+          <em-icon class="form-icon-text" :style="[$em.$getThemeStyle(['color-2'])]" :unicode="'\uf256'"></em-icon>
+        </view>
+        <view class="form-input-col">
+          <text class="form-label" :style="[$em.$getThemeStyle(['color-6'])]">账号</text>
+          <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+            <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" type="text" placeholder="请填写账号" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+          </view>
+        </view>
+      </view>
+      <view class="form-row">
+        <view class="form-icon" :style="[$em.$getThemeStyle(['bg-color-2'])]">
+          <em-icon class="form-icon-text" :style="[$em.$getThemeStyle(['color-2'])]" :unicode="'\uee6f'"></em-icon>
+        </view>
+        <view class="form-input-col">
+          <text class="form-label" :style="[$em.$getThemeStyle(['color-6'])]">密码</text>
+          <view class="form-input-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
+            <input class="form-input" :style="[$em.$getThemeStyle(['color-1'])]" type="password" placeholder="请填写密码" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" />
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="forget">
+      <text class="forget-text" :style="[$em.$getThemeStyle(['color-6'])]">忘记密码？</text>
+    </view>
+    <view class="submit-login" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+      <view class="submit-login-btn" :style="[$em.$getThemeStyle(['bg-color-101'])]" @click="clickLogin">
+        <text class="submit-login-btn-text" :style="[$em.$getThemeStyle(['color-101'])]">登录</text>
+      </view>
+    </view>
+    <view class="register" :style="[$em.$getThemeStyle(['bg-color-1'])]">
+      <view class="register-btn" :style="[$em.$getThemeStyle(['bd-color-3'])]" @click="clickRegister">
+        <text class="register-btn-text" :style="[$em.$getThemeStyle(['color-2'])]">还没账号？马上注册</text>
+      </view>
+    </view>
+    <em-header class="header" title="登录" :em-styles="headerStyles" :left-btns="headerLeftBtns" @clickBtn="clickHeaderBtn"></em-header>
+  </em-page>
+</template>
+
+<script>
+  let app = {}
+  // #ifdef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  }).$vm
+  // #endif
+  // #ifndef MP-WEIXIN
+  app = getApp({
+    allowDefault: true
+  })
+  // #endif
+
+  export default {
+    data() {
+      return {
+
+      }
+    },
+    computed: {
+      pageStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1'])
+        }
+      },
+      headerStyles() {
+        return {
+          wrap: app.$getThemeStyle(['bg-color-1', 'shadow-1']),
+          title: app.$getThemeStyle(['color-1'])
+        }
+      },
+      headerLeftBtns() {
+        return [{
+          iconUnicode: '\uea64',
+          styles: {
+            btn: app.$getThemeStyle(['bg-color-102']),
+            icon: app.$getThemeStyle(['color-102'])
+          }
+        }]
+      }
+    },
+    created() {
+      this.$em = app.$em
+    },
+    methods: {
+      clickHeaderBtn(e) {
+        if (e.position === 'left' && e.index === 0) {
+          // 返回上一页
+          app.$navigateBack()
+        }
+      },
+      clickLogin() {
+        uni.showToast({
+          icon: 'success',
+          title: '登录成功',
+          mask: true,
+          duration: 1500,
+          success: () => {
+            setTimeout(() => {
+              app.$switchTab('/pages/index/index', 'my')
+            }, 1500)
+          }
+        })
+      },
+      clickRegister() {
+        app.$navigateTo('/pages/register/register')
+      }
+    }
+  }
+</script>
+
+<style>
+  .header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
+  }
+
+  .form {
+    margin-top: 10px;
+    padding: 0 28px 28px 28px;
+    border-radius: 34px;
+  }
+
+  .form-row {
+    margin-top: 36px;
+    flex-direction: row;
+    /* align-items: center; */
+  }
+
+  .form-icon {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 38px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .form-icon-text {
+    font-size: 18px;
+  }
+
+  .form-input-col {
+    flex: 1;
+    margin-left: 20px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .form-input-wrap {
+    padding: 10px 0;
+    border-bottom-width: 2px;
+    border-style: solid;
+  }
+
+  .form-input {
+    font-size: 14px;
+  }
+
+  .form-input-placeholder {
+    font-size: 14px;
+  }
+
+  .forget {
+    padding: 0 28px;
+  }
+
+  .forget-text {
+    font-size: 12px;
+  }
+
+  .submit-login {
+    margin-top: 28px;
+    padding: 0 28px;
+  }
+
+  .submit-login-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 58px;
+    border-radius: 12px;
+  }
+
+  .submit-login-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .register {
+    margin-top: 28px;
+    padding: 0 28px;
+  }
+
+  .register-btn {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 58px;
+    border-radius: 12px;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  .register-btn-text {
+    font-size: 14px;
+    font-weight: 700;
+  }
+</style>

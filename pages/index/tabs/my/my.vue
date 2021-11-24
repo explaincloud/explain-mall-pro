@@ -63,7 +63,7 @@
       <view style="width: 750rpx;height: 18px;"></view>
       <em-tab-bar-inset style="padding-top: 18px;"></em-tab-bar-inset>
     </em-scroller>
-    <em-header class="header" title="个人中心" :em-styles="headerStyles" :right-btns="headerRightBtns"></em-header>
+    <em-header class="header" title="个人中心" :em-styles="headerStyles" :right-btns="headerRightBtns" @clickBtn="clickHeaderBtn"></em-header>
   </em-page>
 </template>
 
@@ -101,7 +101,7 @@
       },
       headerStyles() {
         return {
-          wrap: app.$getThemeStyle(['bg-color-1', this.headerShowShadow?'shadow-1':'shadow-0']),
+          wrap: app.$getThemeStyle(['bg-color-1', this.headerShowShadow ? 'shadow-1' : 'shadow-0']),
           title: app.$getThemeStyle(['color-1'])
         }
       },
@@ -134,6 +134,12 @@
           this.headerShowShadow = true
         } else {
           this.headerShowShadow = false
+        }
+      },
+      clickHeaderBtn(e) {
+        if (e.position === 'right' && e.index === 0) {
+          // 跳转到设置页
+          app.$navigateTo('/pages/setup/setup')
         }
       }
     }

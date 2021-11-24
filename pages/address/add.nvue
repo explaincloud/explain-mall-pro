@@ -40,7 +40,7 @@
           <view class="form-row">
             <text class="form-label" :style="[$em.$getThemeStyle(['color-1'])]">位置名称</text>
             <view class="form-textarea-wrap" :style="[$em.$getThemeStyle(['bd-color-3'])]">
-              <textarea class="form-textarea" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.name" placeholder="街道、楼牌号等" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" auto-height maxlength="300"></textarea>
+              <textarea class="form-textarea" :style="[$em.$getThemeStyle(['color-1'])]" v-model="address.name" placeholder="选择所在地区后自动填入" :placeholder-style="`color: ${$em.$getThemeStyle(['color-6'])['color']}`" placeholder-class="form-input-placeholder" auto-height maxlength="300"></textarea>
             </view>
           </view>
           <view class="form-row">
