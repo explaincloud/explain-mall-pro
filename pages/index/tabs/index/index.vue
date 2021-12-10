@@ -34,8 +34,7 @@
             <view class="column-list">
               <view class="column-item" v-for="(xx, xxi) in x.goods" :key="xxi" :class="[xxi===0?'column-item-first-child':'', xxi===x.goods.length-1?'column-item-last-child':'']" @click="$em.$navigateTo('/pages/goods/goods?id='+xx.id)">
                 <view class="column-item-image-wrap">
-                  <image class="column-item-image" :src="xx.image" mode="aspectFill">
-                  </image>
+                  <image class="column-item-image" :src="xx.image" mode="aspectFill"></image>
                   <view class="column-item-btn-favorite">
                     <em-icon class="column-item-btn-favorite-icon" :unicode="'\ueae5'"></em-icon>
                   </view>
